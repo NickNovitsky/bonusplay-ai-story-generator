@@ -2,13 +2,13 @@
 # BonusPlay AI Book Creator 📚✨
 
 **Create your own magical storybook from just one idea — with AI-powered writing and beautiful illustrations.**  
-This is the official source code for [https://bonusplay.com](https://bonusplay.com).
+This is the official source code for [https://www.bonusplay.com](https://www.bonusplay.com).
 
 ---
 
 ## 🚀 Live Demo
 
-👉 Coming soon: [https://bonusplay.com](https://bonusplay.com)
+👉 Coming soon: [https://www.bonusplay.com](https://www.bonusplay.com)
 
 ---
 
@@ -144,7 +144,7 @@ This is the official source code for [https://bonusplay.com](https://bonusplay.c
 See `.env.local.example` for all required variables. Example:
 
 ```env
-NEXT_PUBLIC_SITE_URL=https://bonusplay.com
+NEXT_PUBLIC_SITE_URL=https://www.bonusplay.com
 STRIPE_SECRET_KEY=sk_test_xxx
 STRIPE_WEBHOOK_SECRET=whsec_xxx
 SUPABASE_URL=https://xyz.supabase.co
