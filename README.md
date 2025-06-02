@@ -158,7 +158,7 @@ NEXT_PUBLIC_POSTHOG_KEY=phc_xxx
 
 ## 🛡 License
 
-© 2025 BonusPlay AI. All rights reserved.
+© 2025 Gamesoft Interactive Limited. This platform is developed by Gamesoft Interactive Limited and licensed for use by BonusTrade Interactive Limited. All rights reserved.
 
 ---
 
