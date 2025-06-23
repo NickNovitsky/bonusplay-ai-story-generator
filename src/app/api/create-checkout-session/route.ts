@@ -23,7 +23,7 @@ export async function POST(req: NextRequest) {
     metadata: {
       book_id: bookId,
     },
-    success_url: `${process.env.BASE_URL}/book/${bookId}`,
+    success_url: `${process.env.BASE_URL}/thankyou?bookId=${bookId}`,
     cancel_url: `${process.env.BASE_URL}/`,
   })
 

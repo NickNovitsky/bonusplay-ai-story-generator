@@ -1,23 +1,13 @@
 'use client'
-import { useRouter } from 'next/navigation'
-// eslint-disable-next-line
-import { useActionState, useState } from 'react'
+
+import { useState } from 'react'
 import { Box, Button, TextField, Typography, Stack } from '@mui/material'
 
-import { surpriseMe } from '@/actions/surprise-me.action';
+import { initBook } from '@/actions/init-book.action';
 
 export default function HomePage() {
 
-  //const [state, surpriseMeAction, pending] = useActionState(surpriseMe, "");
-
-  const [idea, setIdea] = useState('');
-  const router = useRouter()
-
-  const handleRoute = (type: 'surprise' | 'guide') => {
-    if (!idea.trim()) return
-    localStorage.setItem('user_idea', idea)
-    router.push(`/${type}/start`)
-  }
+  const [idea, setIdea] = useState("");
 
   return (
     <Box sx={{ textAlign: 'center', mt: 10, maxWidth: 600, mx: 'auto' }}>
@@ -34,10 +24,10 @@ export default function HomePage() {
       />
 
       <Stack direction="row" spacing={2} justifyContent="center" sx={{ mt: 4 }}>
-        <Button variant="outlined" onClick={() => surpriseMe(idea)}>
+        <Button variant="outlined" onClick={() => initBook(idea, false)}>
           🔮 Surprise Me
         </Button>
-        <Button variant="contained" onClick={() => handleRoute('guide')}>
+        <Button variant="contained" onClick={() => initBook(idea, true)}>
           🎛️ Let Me Guide It
         </Button>
       </Stack>

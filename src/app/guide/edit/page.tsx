@@ -55,7 +55,7 @@ export default function GuideEditPage() {
           <Box sx={{ border: '1px solid #ccc', p: 2, minHeight: 400, mt: 2 }}>
             <EditorContent editor={editor} />
           </Box>
-          <Button variant="contained" sx={{ mt: 3 }} onClick={handleContinue}>
+          <Button variant="contained" sx={{ mt: 3 }} onClick={() => handleContinue()}>
             Preview Final Version
           </Button>
         </>

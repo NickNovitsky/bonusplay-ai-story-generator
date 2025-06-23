@@ -3,10 +3,11 @@
 -- Table to store generated books
 create table books (
   id uuid primary key default gen_random_uuid(),
+  workflow jsonb,
   title text,
   idea text,
   gpt_output json,
-  cover_image_url text,
+  coverImageUrl text,
   description text,
   text text,
   pdf_url text,
