@@ -4,8 +4,9 @@ import { generateCover } from '@/actions/generate-cover';
 import { generateOutline } from '@/actions/generate-outline';
 import { generatePreview } from '@/actions/generate-preview.action';
 import { generateText } from '@/actions/generate-text.action';
-import { Typography, Card, CardContent, CardMedia, Box } from '@mui/material';
+import { Typography, Card, CardContent, CardMedia, Box, Link } from '@mui/material';
 import { useEffect, useState } from 'react';
+import UpgradeButton from './UpgradeButton';
 
 type Book = {
     id: string,
@@ -25,7 +26,7 @@ export function BookPreview({ book } : { book: Book }) {
     const [coverImageUrl, setCoverImageUrl] = useState("");
     const [title, setTitle] = useState(book.title || "");
     const [description, setDescription] = useState(book.description || "");
-    const [text, setText] = useState(["Preparing book text..."]);
+    const [text, setText] = useState("");
 
     useEffect(() => {
         async function run() {
@@ -66,7 +67,7 @@ export function BookPreview({ book } : { book: Book }) {
                     book.text = response.result.text;
                 }
             }
-            setText(book.text.split('\n'));
+            setText(book.text);
         }
         run();
 
@@ -92,13 +93,26 @@ export function BookPreview({ book } : { book: Book }) {
                 </CardContent>
             </Card>
 
+            {!book.is_paid && <Box sx={{ mt: 4 }}>
+                <UpgradeButton id={book.id} />
+            </Box>}
+
             {book.is_paid &&
                 <Box>
-                    {text.map(p => {
+                    {text.split(/(?<!\\)\\n|\n/).filter(item => item !== "").map(p => {
                         return <Typography key={p} align="left" padding={1}>{p}</Typography>
                     })}
                 </Box>
             }
+
+            {book.is_paid && !text &&
+                <Typography>Generating book...</Typography>
+            }
+
+            {book.is_paid && text !== "" &&
+                <Link href={`/book/${book.id}/pdf`}>Get printed version</Link>
+            }
+            
         </>
     )
 }

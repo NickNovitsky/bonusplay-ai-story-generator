@@ -34,7 +34,7 @@ export async function generateText(bookId: string) {
 
     const content = JSON.parse(gptResponse.choices[0].message.content || "");
 
-    console.info(content);
+    console.info('Generated content:', content);
 
     // Save to Supabase
 

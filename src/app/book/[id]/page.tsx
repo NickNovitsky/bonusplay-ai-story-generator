@@ -1,5 +1,4 @@
 import { BookPreview } from "@/components/BookPreview";
-import UpgradeButton from "@/components/UpgradeButton";
 import { supabase } from "@/lib/supabase";
 import Box from "@mui/material/Box";
 import Link from "next/link";
@@ -22,10 +21,7 @@ async function Book({params} : PageParams) {
     return (        
         <Box sx={{ textAlign: 'center', mt: 10, maxWidth: 600, mx: 'auto' }}>
             <Link href="/">BonusPlay Main Page</Link>
-            <BookPreview book={book}/>
-            {!book.is_paid && <Box sx={{ mt: 4 }}>
-                <UpgradeButton id={id} />
-            </Box>}
+            <BookPreview book={book}/>            
         </Box>
     )
 }
