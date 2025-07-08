@@ -19,19 +19,44 @@ async function Page({params} : PageParams) {
     if (!pdfUrl) {
         
         // Generate PDF
-        const doc = new PDFDocument()
+
+        const doc = new PDFDocument({ size: 'A4', margin: 50, bufferPages: true });
         const bufferStream = new stream.PassThrough()
         doc.pipe(bufferStream)
-        doc.fontSize(20).text(book.title, { align: 'center' })
+
+        // Title page
+        doc.fontSize(28).fillColor('#1a1a1a').text(book.title, {
+        align: 'center',
+        underline: true
+        })
         doc.moveDown()
-        doc.fontSize(12).text(`By Author`, { align: 'center' })
-        doc.moveDown();
-        book.text.split("\\n").map((p: string) => {
-                doc.fontSize(14).text(p, { align: 'left' });
-                doc.moveDown();
-            }
-        );
-        
+        doc.fontSize(18).fillColor('#444').text(`By Anonymous`, {
+            align: 'center'
+            })
+        doc.addPage()
+
+        // Story text page
+        doc.fontSize(12).fillColor('#000').text(book.text, {
+            align: 'left',
+            lineGap: 6
+        });        
+
+        // Footer on every page except title
+        const pageCount = doc.bufferedPageRange().count;
+        for (let i = 1; i < pageCount; i++) {
+            doc.switchToPage(i);
+            doc.page.margins = {
+                top : 0,
+                bottom: 0,
+                left: 0,
+                right: 0,
+            };
+            doc.fontSize(8).fillColor('#888').text('Created with BonusPlay.com', 0, 800, {
+                align: 'center',
+                width: 595
+            });
+        }
+
         doc.end();
 
         const getBuffer = async () => {
@@ -58,7 +83,7 @@ async function Page({params} : PageParams) {
             return <Typography>Error generating PDF</Typography>
         }
 
-        const { data: publicUrlData } = supabase.storage.from('books').getPublicUrl(`${id}.pdf`);
+        const { data: publicUrlData } = supabase.storage.from('books').getPublicUrl(filename);
 
         await supabase.from('books').update({pdf_url: publicUrlData.publicUrl}).eq('id', id);
 
