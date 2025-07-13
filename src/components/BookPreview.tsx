@@ -7,6 +7,7 @@ import { generateText } from '@/actions/generate-text.action';
 import { Typography, Card, CardContent, CardMedia, Box, Link } from '@mui/material';
 import { useEffect, useState } from 'react';
 import UpgradeButton from './UpgradeButton';
+import BookPreviewDescription from './BookPreviewDescription';
 
 type Book = {
     id: string,
@@ -25,7 +26,6 @@ export function BookPreview({ book } : { book: Book }) {
     const [generatingOutline, setGeneratingOutline] = useState(true);
     const [coverImageUrl, setCoverImageUrl] = useState("");
     const [title, setTitle] = useState(book.title || "");
-    const [description, setDescription] = useState(book.description || "");
     const [text, setText] = useState("");
 
     useEffect(() => {
@@ -58,7 +58,6 @@ export function BookPreview({ book } : { book: Book }) {
                 }
             }
             setTitle(book.title);
-            setDescription(book.description);
         }
         async function runGenerateText() {
             if (!book.text) {
@@ -89,9 +88,11 @@ export function BookPreview({ book } : { book: Book }) {
                 }
                 <CardContent>
                     <Typography variant="h5">{title}</Typography>
-                    <Typography variant="body1" sx={{ mt: 1 }}>{description}</Typography>
+                    <BookPreviewDescription bookId={book.id} />
                 </CardContent>
             </Card>
+
+            
 
             {!book.is_paid && <Box sx={{ mt: 4 }}>
                 <UpgradeButton id={book.id} />
