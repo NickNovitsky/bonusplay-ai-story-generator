@@ -21,7 +21,7 @@ export async function generateCover(bookId: string) {
         - cover must not contain any text.
         - cover must consist of a single illustration (no pages or arrays of pictures)`,
         size: '1024x1024',
-        quality: 'standard',
+        quality: 'low',
         n: 1
     });
 
