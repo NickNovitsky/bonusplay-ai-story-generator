@@ -1,55 +1,55 @@
-import { NextResponse } from 'next/server';
-
 import openai from "@/lib/openai";
-import { supabase } from "@/lib/supabase";
+import { NextResponse } from "next/server";
 
 export async function POST(request: Request) {
 
-  //console.info('body', request.json());
+    const json = await request.json();
 
-  
-  // Variable `tone` is not used yet, but is planned to be used
-  // eslint-disable-next-line
-  const { idea, tone } = await request.json();
+    //const { data: book } = await supabase.from('books').select('*').eq('id', id).single();
 
-  const gptResponse = await openai.chat.completions.create({
-          model: 'gpt-4-turbo',
-          messages: [
-              { role: 'system',
-                  content: `You are an assistant who creates fun children's books from ideas.
-                      Create story title, description and a 7 items which briefly outline book structure.
-                      Also generate full content of the book.
-                      Each item must not exceed 10 words.
-                      Put title as a JSON property "title", description as a JSON property "description", and array of items as a JSON property "outline".
-                      Put text content as JSON property "text"`},
-              { role: 'user', content: idea }
-          ],
-          response_format: {
-              type: "json_object"
-          }
-      });
-  
-    console.info('GPT response', gptResponse.choices[0]);
+    //const idea = book.workflow.idea;
 
-    const content = JSON.parse(gptResponse.choices[0].message.content || "");
+    const gptResponse = await openai.chat.completions.create({
+        model: 'gpt-4-turbo',
+        messages: [
+            { role: 'system',
+                content: `You are given an idea for children's fun book.
+                Using it create 10 items (theses) which briefly outline book structure. Each item must not exceed 10 words.
+                Do not number items. Do not use fancy formatting, use regular text.`},
+            { role: 'user', content: json.idea }
+        ],
+        stream: true
+    });
 
-    console.info(content);
+    const stream = new ReadableStream({
+      async start(controller) {
+        const encoder = new TextEncoder();
+        //let fullResponse = '';
+        for await (const chunk of gptResponse) {
+          const content = chunk.choices[0]?.delta?.content || '';
+          //fullResponse += content;
+          controller.enqueue(encoder.encode(content));
+        }
 
-    // Save to Supabase
-    const { data, error } = await supabase
-        .from('books')
-        //.insert([{ title: titleLine.trim(), description: descLine && descLine.trim(), idea, cover_image_url: coverImage, is_paid: false }])
-        .insert({title: content.title, description: content.description, text: content.text})
-        .select()
-        .single();
+        /* const workflow = {
+            idea: json.idea,
+            outline: fullResponse
+        }
 
-    if (error) {
-        console.error('Supabase insert error:', error);
-        return NextResponse.json({ error: { message: "Internal app error"} }, { status: 500 });
-    }
+        const { data, error } = await supabase.from('books').insert({workflow}).select().single();
+        
+        if (error) {
+            console.error('Supabase insert error:', error);
+            controller.enqueue(encoder.encode("{BOOK ID ERROR}"));
+        }
 
-    const title = content.title;
-    const outline = content.outline;
+        if (data) {
+            controller.enqueue(encoder.encode(`{BOOK ID ${data.id}}`));
+        } */
+       
+        controller.close();
+      }
+    });
 
-  return NextResponse.json({ id: data.id, title, outline }, { status: 200 });
+    return new NextResponse(stream);
 }

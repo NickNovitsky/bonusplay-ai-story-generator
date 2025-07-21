@@ -1,30 +1,18 @@
 "use client"
 
-import { generateOutline } from '@/actions/generate-outline';
-import { submitOutline } from '@/actions/submit-outline.action';
-import { Box, Typography, Button, CircularProgress } from '@mui/material';
+import { submitBook } from '@/actions/submit-book.action';
+import { Box, Typography, Button } from '@mui/material';
 import { EditorContent, useEditor } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import { useEffect, useState } from 'react';
 
-type Book = {
-    id: string,
-    coverImageUrl: string,
-    description: string,
-    title: string,
-    workflow: {
-        outline: string
-    }
-}
+function BookOutline({idea} : {idea: string}) {
 
-function BookOutline({ book } : { book: Book }) {
-
-    const [initialContent, setInitialContent] = useState(book.workflow.outline);
-    const [generatingOutline, setGeneratingOutline] = useState(true);
+    const [text, setText] = useState("");
 
     const editor = useEditor({
         extensions: [StarterKit],
-        content: initialContent || '<p>Loading...</p>',
+        content: text || '<p>Loading...</p>',
         editorProps: {
           attributes: {
             class: 'editor-content',
@@ -33,37 +21,50 @@ function BookOutline({ book } : { book: Book }) {
     });
 
     useEffect(() => {
-        async function run() {
-            if (!book.workflow.outline) {
-                const response = await generateOutline(book.id);
-                const content = response.result && response.result.outline.map((item: string) => `<p>${item}</p>`).join('');
-                setInitialContent(content);
-            }
-            setGeneratingOutline(false);
+        if (editor && text) {
+            editor.commands.setContent(text);
         }
-        run();
-    }, [book.workflow.outline, book.id]);
+    }, [editor, text]);
 
     useEffect(() => {
-        if (editor && initialContent) {
-            editor.commands.setContent(initialContent);
-        }
-    }, [editor, initialContent]);
 
-    return <Box sx={{ mt: 4, maxWidth: 800, mx: 'auto' }}>
+        async function fetchData() {
+
+            const response = await fetch(`/api/generate-outline`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({idea})
+            });
+
+            const reader = response.body!.getReader();
+            const decoder = new TextDecoder();
+
+            while (true) {
+                const { done, value } = await reader.read();
+                if (done) break;
+                
+                const chunk = decoder.decode(value, { stream: true });
+                setText(prev => prev + chunk);
+            } 
+        }
+
+        fetchData();
+        
+    }, [idea]);
+
+    return (
+        <Box sx={{ textAlign: 'center', mt: 10, maxWidth: 600, mx: 'auto' }}>
             <Typography variant="h4" gutterBottom>Edit Your Story</Typography>
-            {generatingOutline && <CircularProgress />}
-            {!generatingOutline && editor && (
-                <>
-                <Box sx={{ border: '1px solid #ccc', p: 2, minHeight: 400, mt: 2 }}>
-                    <EditorContent editor={editor} />
-                </Box>
-                <Button variant="contained" sx={{ mt: 3 }} onClick={() => submitOutline(book.id, editor.getText())}>
-                    Preview Final Version
-                </Button>
-                </>
-            )}
+            <Box sx={{ border: '1px solid #ccc', p: 2, minHeight: 400, mt: 2 }}>
+                <EditorContent editor={editor} />
+            </Box>
+            <Button variant="contained" sx={{ mt: 3 }} onClick={() => submitBook(idea, editor!.getText(), null)}>
+                Preview Final Version
+            </Button>
         </Box>
+    )
 }
 
 export default BookOutline;

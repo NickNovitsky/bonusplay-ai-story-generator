@@ -1,9 +1,8 @@
-import { BookPreview } from "@/components/BookPreview";
+import UpgradeButton from "@/components/UpgradeButton";
 import { supabase } from "@/lib/supabase";
-import { Typography } from "@mui/material";
+import { CardMedia, Typography } from "@mui/material";
 import Box from "@mui/material/Box";
 import Link from "next/link";
-import { redirect } from "next/navigation";
 
 type PageParams = {
     params: Promise<{ id: string }>
@@ -20,14 +19,23 @@ async function Book({params} : PageParams) {
         return <Typography>Failed to obtain book data</Typography>
     }
 
-    // If workflow.guided and no outline redirect to edit outline
-
-    if (book.workflow.guided && !book.workflow.outline) redirect(`/book/${id}/guide`);
+    if (book.is_paid) {
+        return (
+            <Box sx={{ textAlign: 'center', mt: 10, maxWidth: 600, mx: 'auto' }}>
+                <Typography>Book paid. Finalize text generation.</Typography>
+                <CardMedia component="img" image={book.coverImageUrl} sx={{height: 512, width: 512}} alt="Book cover" />
+                <Typography>{book.workflow.outline}</Typography>
+                
+            </Box>
+        )
+    }
 
     return (        
         <Box sx={{ textAlign: 'center', mt: 10, maxWidth: 600, mx: 'auto' }}>
             <Link href="/">BonusPlay Main Page</Link>
-            <BookPreview book={book}/>            
+            <CardMedia component="img" image={book.coverImageUrl} sx={{height: 512, width: 512}} alt="Book cover" />
+            <Typography>{book.workflow.outline}</Typography>
+            <UpgradeButton id={id} />
         </Box>
     )
 }

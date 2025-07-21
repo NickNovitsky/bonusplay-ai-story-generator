@@ -31,7 +31,21 @@ export async function POST(request: Request) {
           controller.enqueue(encoder.encode(content));
         }
 
-        //await supabase.from('books').update({description: fullResponse}).eq('id', id);
+        /* const workflow = {
+          idea: json.idea,
+          description: fullResponse
+        }
+
+        const { data, error } = await supabase.from('books').insert({workflow}).select().single();
+        
+        if (error) {
+            console.error('Supabase insert error:', error);
+            controller.enqueue(encoder.encode("{BOOK ID ERROR}"));
+        }
+
+        if (data) {
+          controller.enqueue(encoder.encode(`{BOOK ID ${data.id}}`));
+        } */
         
         controller.close();
       }
