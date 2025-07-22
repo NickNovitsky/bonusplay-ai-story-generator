@@ -12,11 +12,11 @@ export default function HomePage() {
     const [bookPreviewVisible, showBookPreview] = useState(false);
     const [bookOutlineVisible, showBookOutline] = useState(false);
 
-  return (
-    <>
-    {bookPreviewVisible && <BookPreview idea={idea} />}
-    {bookOutlineVisible && <BookOutline idea={idea} />}
-    {!bookPreviewVisible && !bookOutlineVisible &&
+    if (bookPreviewVisible) return <BookPreview idea={idea} />
+
+    if (bookOutlineVisible) return <BookOutline idea={idea} />
+
+    return (
         <Box sx={{ textAlign: 'center', mt: 10, maxWidth: 600, mx: 'auto' }}>
             <Typography variant="h3" gutterBottom>
                 Imagine your own book from just one idea...
@@ -35,7 +35,5 @@ export default function HomePage() {
                 <Button variant="contained" onClick={() => showBookOutline(true)}>🎛️ Let Me Guide It</Button>
             </Stack>
         </Box>
-    }
-    </>
-  )
+    )
 }

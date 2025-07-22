@@ -9,6 +9,7 @@ export function BookPreview({idea} : {idea: string}) {
     const [creatingTextComplete, setCreatingTextComplete] = useState(false);
     const [text, setText] = useState("");
     const [coverImageUrl, setCoverImageUrl] = useState("");
+    const [coverImageError, setCoverImageError] = useState(false);
 
     useEffect(() => {
 
@@ -21,6 +22,12 @@ export function BookPreview({idea} : {idea: string}) {
                 },
                 body: JSON.stringify({idea})
             });
+
+            if (response.headers.get('Content-Type') === 'application/json') {
+                setText("Failed to obtain response");
+                setCreatingTextComplete(true);
+                return;
+            }
 
             const reader = response.body!.getReader();
             const decoder = new TextDecoder();
@@ -43,6 +50,9 @@ export function BookPreview({idea} : {idea: string}) {
                 },
                 body: JSON.stringify({idea})
             });
+            if (!response.ok) {
+                return setCoverImageError(true);
+            }
             const { url } = await response.json();
             setCoverImageUrl(url);
         }
@@ -56,14 +66,9 @@ export function BookPreview({idea} : {idea: string}) {
         <Box sx={{ textAlign: 'center', mt: 10, maxWidth: 600, mx: 'auto' }}>
             <Typography>{text || "Creating your wonderful book..."}</Typography>
             {creatingTextComplete && <Card sx={{ mt: 4, mb: 4, height: 512, width: 512, mx: 'auto' }}>
-                {coverImageUrl &&
-                    <CardMedia component="img"
-                        image={coverImageUrl}
-                        sx={{height: 512, width: 512}}
-                        alt="Book cover"
-                    />
-                || <Typography>Let me create a cover now...</Typography>
-                }
+                {coverImageError && <Typography>Failed to obtain image</Typography>}
+                {coverImageUrl && <CardMedia component="img" image={coverImageUrl} sx={{height: 512, width: 512}} alt="Book cover" />}
+                {!coverImageUrl && !coverImageError && <Typography>Let me create a cover now...</Typography>}
             </Card>     
             }
             {creatingTextComplete && coverImageUrl && <Button variant="contained" sx={{ mt: 3 }} onClick={() => submitBook(idea, text, coverImageUrl)}>Preview Final Version</Button>}

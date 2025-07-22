@@ -10,10 +10,9 @@ export async function POST(req: NextRequest) {
 
   const dalleRes = await openai.images.generate({
     model: 'dall-e-3',
-   prompt: `Cover for a children's book using this idea: ${idea}.
-        Consider the following restrictions:
-        - cover must not contain any text.
-        - cover must consist of a single illustration (no pages or arrays of pictures)`,
+    prompt: `A near-photorealistic colorful illustration for this description: ${idea}.
+      Try to understand main actor of the idea and place it enlarged in the middle of the illustration.
+      Illustration must not contain any text.`,
     size: '1024x1024',
     quality: 'standard',
     n: 1
