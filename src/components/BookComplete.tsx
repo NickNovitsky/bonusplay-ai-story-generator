@@ -1,0 +1,55 @@
+'use client';
+
+import { Box, CardMedia, Typography } from "@mui/material";
+import { useEffect, useState } from "react";
+import { Book } from "@/types/book";
+
+export default function BookComplete({book} : {book: Book}) {
+
+    const [text, setText] = useState(book.text);
+    const [paragraphs, setParagraphs] = useState<string[]>([]);
+
+    useEffect(() => {
+    
+        async function fetchText() {
+
+            const response = await fetch(`/api/generate-story`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({id: book.id})
+            });
+
+            if (response.headers.get('Content-Type') === 'application/json') {
+                setText("Failed to obtain response");
+                return;
+            }
+
+            const reader = response.body!.getReader();
+            const decoder = new TextDecoder();
+
+            while (true) {
+                const { done, value } = await reader.read();
+                if (done) break;
+                
+                const chunk = decoder.decode(value, { stream: true });
+                setText(prev => prev + chunk);
+            }
+        }
+
+        if (!book.text) fetchText();                
+    }, [book]);
+
+    useEffect(() => {
+        const paragraphs = text && text.split('*') || [];
+        setParagraphs(paragraphs);
+    }, [text]);
+
+    return (
+            <Box sx={{ textAlign: 'center', mt: 10, maxWidth: 600, mx: 'auto' }}>
+                <CardMedia component="img" image={book.coverImageUrl} sx={{height: 512, width: 512}} alt="Book cover" />
+                {paragraphs.map(p => <Typography key={p} sx={{textAlign: "left", mb: 1}}>{p}</Typography>)}
+            </Box>
+        ) 
+}

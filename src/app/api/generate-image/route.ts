@@ -10,8 +10,7 @@ export async function POST(req: NextRequest) {
 
   const dalleRes = await openai.images.generate({
     model: 'dall-e-3',
-    prompt: `A near-photorealistic colorful illustration for this description: ${idea}.
-      Try to understand main actor of the idea and place it enlarged in the middle of the illustration.
+    prompt: `A whimsical illustration for children using the following description: ${idea}.
       Illustration must not contain any text.`,
     size: '1024x1024',
     quality: 'standard',
