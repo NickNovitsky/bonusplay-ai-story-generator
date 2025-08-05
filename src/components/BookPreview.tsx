@@ -13,6 +13,8 @@ export function BookPreview({idea} : {idea: string}) {
 
     useEffect(() => {
 
+        const abortController = new AbortController();
+
         async function fetchData() {
 
             const response = await fetch(`/api/start`, {
@@ -20,7 +22,8 @@ export function BookPreview({idea} : {idea: string}) {
                 headers: {
                     'Content-Type': 'application/json'
                 },
-                body: JSON.stringify({idea})
+                body: JSON.stringify({idea}),
+                signal: abortController.signal
             });
 
             if (response.headers.get('Content-Type') === 'application/json') {
@@ -48,7 +51,8 @@ export function BookPreview({idea} : {idea: string}) {
                 headers: {
                     'Content-Type': 'application/json'
                 },
-                body: JSON.stringify({idea})
+                body: JSON.stringify({idea}),
+                signal: abortController.signal
             });
             if (!response.ok) {
                 return setCoverImageError(true);
@@ -59,6 +63,10 @@ export function BookPreview({idea} : {idea: string}) {
 
         fetchData();
         generateImage();
+
+        return () => {
+            abortController.abort();
+        }
         
     }, [idea]);
 
