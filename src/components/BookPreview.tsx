@@ -3,9 +3,9 @@
 import { Typography, Card, CardMedia, Box, Button } from '@mui/material';
 import { useEffect, useState } from 'react';
 import { submitBook } from '@/actions/submit-book.action';
-import { BookIdea } from '@/types/book';
+import { BookCreationOptions } from '@/types/book';
 
-export function BookPreview({bookIdea} : {bookIdea: BookIdea}) {
+export function BookPreview({bookCreationOptions} : {bookCreationOptions: BookCreationOptions}) {
 
     const [creatingTextComplete, setCreatingTextComplete] = useState(false);
     const [text, setText] = useState("");
@@ -23,7 +23,7 @@ export function BookPreview({bookIdea} : {bookIdea: BookIdea}) {
                 headers: {
                     'Content-Type': 'application/json'
                 },
-                body: JSON.stringify({idea: bookIdea.idea}),
+                body: JSON.stringify({idea: bookCreationOptions.idea}),
                 signal: abortController.signal
             });
 
@@ -52,7 +52,7 @@ export function BookPreview({bookIdea} : {bookIdea: BookIdea}) {
                 headers: {
                     'Content-Type': 'application/json'
                 },
-                body: JSON.stringify({idea: bookIdea.idea}),
+                body: JSON.stringify(bookCreationOptions),
                 signal: abortController.signal
             });
             if (!response.ok) {
@@ -69,7 +69,7 @@ export function BookPreview({bookIdea} : {bookIdea: BookIdea}) {
             abortController.abort();
         }
         
-    }, [bookIdea]);
+    }, [bookCreationOptions]);
 
     return (
         <Box sx={{ textAlign: 'center', mt: 10, maxWidth: 600, mx: 'auto' }}>
@@ -80,7 +80,7 @@ export function BookPreview({bookIdea} : {bookIdea: BookIdea}) {
                 {!coverImageUrl && !coverImageError && <Typography>Let me create a cover now...</Typography>}
             </Card>     
             }
-            {creatingTextComplete && coverImageUrl && <Button variant="contained" sx={{ mt: 3 }} onClick={() => submitBook(bookIdea.idea, text, coverImageUrl)}>Preview Final Version</Button>}
+            {creatingTextComplete && coverImageUrl && <Button variant="contained" sx={{ mt: 3 }} onClick={() => submitBook(bookCreationOptions.idea, text, coverImageUrl)}>Preview Final Version</Button>}
         </Box>
     )
 }

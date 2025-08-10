@@ -1,17 +1,35 @@
-// app/api/generate-image/route.ts
 import { NextRequest, NextResponse } from 'next/server'
-import OpenAI from 'openai'
-
-const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY! })
+import openai from '@/lib/openai';
 
 export async function POST(req: NextRequest) {
 
-  const { idea } = await req.json();
+  // TODO: Validate input parameters
+
+  const json = await req.json();
+
+  const { idea, layout, artStyle, mood, lighting, colorPalette } = json;
+
+  const formattedPrompt = ` 
+    Create an illustration for children inspired by: "${idea}". 
+    
+    Visual art direction: 
+    - Art style: ${artStyle.replaceAll('-', ' ')} 
+    - Mood: ${mood} 
+    - Lighting: ${lighting} 
+    - Color palette: ${colorPalette} 
+    
+    Instructions: 
+    - Format should resemble a professionally illustrated children's storybook. 
+    - Ensure layout is ${layout} with space for large, clear, 
+    artistic title text. 
+    - Use artistic font styles suitable for children's books. 
+    - Title and image must appear harmoniously together as a cohesive book cover. 
+    - Remember to keep character consistency for each subsequent page in the story. 
+    `;
 
   const dalleRes = await openai.images.generate({
     model: 'dall-e-3',
-    prompt: `A whimsical illustration for children using the following description: ${idea}.
-      Illustration must not contain any text.`,
+    prompt: formattedPrompt,
     size: '1024x1024',
     quality: 'standard',
     n: 1

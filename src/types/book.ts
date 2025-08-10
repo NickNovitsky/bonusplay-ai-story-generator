@@ -11,7 +11,7 @@ export type BookWorkflow = {
     outline: string
 }
 
-export type BookIdea = {
+export type BookCreationOptions = {
     idea: string,
     deliveryFormat: string,
     layout: string,

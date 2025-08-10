@@ -22,9 +22,9 @@ export default function HomePage() {
     const [bookPreviewVisible, showBookPreview] = useState(false);
     const [bookOutlineVisible, showBookOutline] = useState(false);
 
-    const bookIdea = { idea, deliveryFormat, layout, artStyle, mood, lighting, colorPalette }
+    const bookCreationOptions = { idea, deliveryFormat, layout, artStyle, mood, lighting, colorPalette }
 
-    if (bookPreviewVisible) return <BookPreview bookIdea={bookIdea} />
+    if (bookPreviewVisible) return <BookPreview bookCreationOptions={bookCreationOptions} />
 
     if (bookOutlineVisible) return <BookOutline idea={idea} />
 
