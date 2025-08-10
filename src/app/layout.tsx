@@ -1,7 +1,10 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
-import { Container, Link, Typography } from "@mui/material";
+import { ThemeProvider } from "@mui/material";
+import { AppRouterCacheProvider } from "@mui/material-nextjs/v15-appRouter";
+import theme from "./theme";
+import SiteHeader from "@/components/SiteHeader";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -13,16 +16,16 @@ export const metadata: Metadata = {
   description: "Imagine your own book from just one idea",
 };
 
-export default function RootLayout({
-  children,
-}: Readonly<{
-  children: React.ReactNode;
-}>) {
+export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="en">
       <body className={`${inter.variable} antialiased`}>
-        <Container sx={{p: 6}}><Typography sx={{textAlign: "center"}}><Link href="/">BonusPlay</Link></Typography></Container>
-        {children}
+        <AppRouterCacheProvider>
+          <ThemeProvider theme={theme}>
+            <SiteHeader />   
+            {children}
+          </ThemeProvider>
+        </AppRouterCacheProvider>
       </body>
     </html>
   );
