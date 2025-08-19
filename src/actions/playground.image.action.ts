@@ -14,6 +14,7 @@ export async function generateImage(initialState: DataState, formData: FormData)
     const response = await openai.images.generate({
             model: 'dall-e-3',
             prompt,
+            style: 'natural',
             size: '1024x1024',
             quality: 'standard',
             n: 1
