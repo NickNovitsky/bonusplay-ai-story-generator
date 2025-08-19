@@ -10,26 +10,28 @@ export async function POST(req: NextRequest) {
   const { idea, layout, artStyle, mood, lighting, colorPalette } = json;
 
   const formattedPrompt = ` 
-    Create an illustration for children inspired by: "${idea}". 
+    Create the FINAL FLAT 2D FRONT COVER ARTWORK for a children's picture book.
+    Subject: ${clean(idea)} 
     
     Visual art direction: 
-    - Art style: ${artStyle.replaceAll('-', ' ')} 
-    - Mood: ${mood} 
-    - Lighting: ${lighting} 
-    - Color palette: ${colorPalette} 
+    • Art style: ${artStyle.replaceAll('-', ' ')} 
+    • Mood: ${mood} 
+    • Lighting: ${lighting} 
+    • Color scheme: ${colorPalette} 
     
-    Instructions: 
-    - Format should resemble a professionally illustrated children's storybook. 
-    - Ensure layout is ${layout} with space for large, clear, 
-    artistic title text. 
-    - Use artistic font styles suitable for children's books. 
-    - Title and image must appear harmoniously together as a cohesive book cover. 
-    - Remember to keep character consistency for each subsequent page in the story. 
+    Composition requirements:
+    • Full-bleed illustration that fills the entire canvas edge-to-edge.
+    • Straight-on view (0°). NOT a 3D book, NOT a mockup, NOT a scene, NOT a photograph.
+    • Do NOT include any surrounding objects or props: no tables, palettes, paints, pencils, brushes, frames, hands, books, or devices.
+    • No borders, spines, pages, drop shadows, or perspective tilt.
+    • No text or typography; the title will be added later by the app.
+    • Child-friendly, cohesive design with a clear focal character.
     `;
 
   const dalleRes = await openai.images.generate({
     model: 'dall-e-3',
     prompt: formattedPrompt,
+    style: 'natural',
     size: '1024x1024',
     quality: 'standard',
     n: 1
@@ -38,3 +40,6 @@ export async function POST(req: NextRequest) {
   const url = dalleRes.data![0].url
   return NextResponse.json({ url });
 }
+
+const clean = (s: string) =>
+    String(s || '').replace(/[^\w\s,&\-\./]/g, '').trim();
