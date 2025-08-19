@@ -7,7 +7,7 @@ export async function POST(req: NextRequest) {
 
   const json = await req.json();
 
-  const { idea, layout, artStyle, mood, lighting, colorPalette } = json;
+  const { idea, artStyle, mood, lighting, colorPalette } = json;
 
   const formattedPrompt = ` 
     Create the FINAL FLAT 2D FRONT COVER ARTWORK for a children's picture book.
