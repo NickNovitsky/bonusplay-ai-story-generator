@@ -1,9 +1,7 @@
 import Stripe from 'stripe'
 import { NextRequest } from 'next/server'
-import { createClient } from '@supabase/supabase-js'
 import stripe from '@/lib/stripe';
-
-const supabase = createClient(process.env.SUPABASE_URL!, process.env.SUPABASE_ANON_KEY!)
+import { supabase } from '@/lib/supabase';
 
 export async function POST(req: NextRequest) {
   console.info('stripe-webhook');

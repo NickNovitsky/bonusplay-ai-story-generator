@@ -1,6 +1,4 @@
-import { createClient } from '@supabase/supabase-js'
-
-const supabase = createClient(process.env.SUPABASE_URL!, process.env.SUPABASE_ANON_KEY!)
+import { supabase } from './supabase';
 
 export async function uploadPdf(bookId: string, fileBytes: Uint8Array) {
   const filePath = `books/${bookId}.pdf`;
