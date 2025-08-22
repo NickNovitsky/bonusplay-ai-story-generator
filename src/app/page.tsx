@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react';
-import { Button, TextField, Typography, Stack, styled, Container, Grid, MenuItem, Select, FormControl, InputLabel } from '@mui/material';
+import { Button, TextField, Typography, Stack, styled, Container, Grid, MenuItem, Select, FormControl, InputLabel, Checkbox, FormControlLabel } from '@mui/material';
 
 import { BookPreview } from '@/components/BookPreview';
 import BookOutline from '@/components/BookOutline';
@@ -21,12 +21,24 @@ export default function HomePage() {
     const [colorPalette, setColorPalette] = useState("vibrant-playful");
     const [bookPreviewVisible, showBookPreview] = useState(false);
     const [bookOutlineVisible, showBookOutline] = useState(false);
+    const [checkboxChecked, setCheckboxChecked] = useState(true);
 
     const bookCreationOptions = { idea, deliveryFormat, layout, artStyle, mood, lighting, colorPalette }
 
     if (bookPreviewVisible) return <BookPreview bookCreationOptions={bookCreationOptions} />
 
-    if (bookOutlineVisible) return <BookOutline idea={idea} />
+    if (bookOutlineVisible) return <BookOutline idea={idea} />    
+
+    function handleSubmit() {
+        return checkboxChecked ? showBookOutline(true) : showBookPreview(true);
+    }
+
+    const checkboxLabel = (
+        <Stack textAlign="left">
+            <Typography>Let me edit the story as it&apos;s created</Typography>
+            <Typography className="text-gray-400" fontSize={12}>Leave this off to let us surprise you with a ready-made book</Typography>
+        </Stack>
+    );
 
     return (
         <Container sx={{border: 'solid 1px #E4E4E7', borderRadius: '16px', backgroundColor: '#f9f9f9'}} className="py-10 px-10">
@@ -135,9 +147,9 @@ export default function HomePage() {
                     </Grid>
                 </Grid>
 
-                <Stack direction="row" spacing={2} justifyContent="right" sx={{ mt: 4 }}>
-                    <Button variant="outlined" onClick={() => showBookPreview(true)}>🔮 Surprise Me</Button>
-                    <Button variant="contained" onClick={() => showBookOutline(true)}>🎛️ Let Me Guide It</Button>
+                <Stack spacing={2} justifyContent="right" sx={{ mt: 4 }}>
+                    <Button variant="contained" onClick={() => handleSubmit()}>✦ Create my story</Button>
+                    <FormControlLabel control={<Checkbox checked={checkboxChecked} onChange={e => setCheckboxChecked(e.target.checked)}/>} label={checkboxLabel} />
                 </Stack>
             </Stack>
         </Container>
