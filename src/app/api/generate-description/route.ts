@@ -17,7 +17,10 @@ export async function POST(request: Request) {
               { role: 'system',
                   content: `You are given an idea for children's fun book.
                   Using it create a complete story which must not consist of more than ten sentences.
-                  Do not include title. Do not use fancy formatting, use regular text.`},
+                  Include title in the beginning and separate it from further text with an asterisk.
+                  Then include a description for book cover consisting of no more than five words,
+                  suitable for providing it to image generation service, separated from further text with an asterisk.
+                  Do not use fancy formatting, use regular text.`},
               { role: 'user', content: json.idea }
           ],
           stream: true
