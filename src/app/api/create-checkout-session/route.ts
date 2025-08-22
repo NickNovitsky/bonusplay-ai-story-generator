@@ -8,16 +8,17 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
 export async function POST(req: NextRequest) {
   const { bookId } = await req.json()
 
+    if (!process.env.STRIPE_BOOK_PRICE_ID) {
+        console.error('Missing STRIPE_BOOK_PRICE_ID');
+        return NextResponse.json({ error: 'Internal error' }, { status: 500 });
+    }        
+
   const session = await stripe.checkout.sessions.create({
     mode: 'payment',
     line_items: [
       {
-        price_data: {
-          currency: 'usd',
-          product_data: { name: 'BonusPlay AI Storybook' },
-          unit_amount: 999,
-        },
-        quantity: 1,
+        price: process.env.STRIPE_BOOK_PRICE_ID,
+        quantity: 1
       },
     ],
     metadata: {
