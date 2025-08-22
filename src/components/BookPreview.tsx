@@ -18,7 +18,7 @@ export function BookPreview({bookCreationOptions} : {bookCreationOptions: BookCr
 
         async function fetchData() {
 
-            const response = await fetch(`/api/start`, {
+            const response = await fetch(`/api/generate-description`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
