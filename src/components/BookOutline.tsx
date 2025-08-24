@@ -1,12 +1,13 @@
 "use client"
 
 import { submitBook } from '@/actions/submit-book.action';
+import { BookCreationOptions } from '@/types/book';
 import { Box, Typography, Button } from '@mui/material';
 import { EditorContent, useEditor } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import { useEffect, useState } from 'react';
 
-function BookOutline({idea} : {idea: string}) {
+function BookOutline({bookCreationOptions} : {bookCreationOptions: BookCreationOptions}) {
 
     const [text, setText] = useState("");
 
@@ -35,7 +36,7 @@ function BookOutline({idea} : {idea: string}) {
                 headers: {
                     'Content-Type': 'application/json'
                 },
-                body: JSON.stringify({idea})
+                body: JSON.stringify({ idea: bookCreationOptions.idea})
             });
 
             const reader = response.body!.getReader();
@@ -52,7 +53,7 @@ function BookOutline({idea} : {idea: string}) {
 
         fetchData();
         
-    }, [idea]);
+    }, [bookCreationOptions.idea]);
 
     return (
         <Box sx={{ textAlign: 'center', mt: 10, maxWidth: 600, mx: 'auto' }}>
@@ -60,7 +61,7 @@ function BookOutline({idea} : {idea: string}) {
             <Box sx={{ border: '1px solid #ccc', p: 2, minHeight: 400, mt: 2 }}>
                 <EditorContent editor={editor} />
             </Box>
-            <Button variant="contained" sx={{ mt: 3 }} onClick={() => submitBook(idea, editor!.getText(), null)}>
+            <Button variant="contained" sx={{ mt: 3 }} onClick={() => submitBook(bookCreationOptions.idea, editor!.getText(), null)}>
                 Preview Final Version
             </Button>
         </Box>
