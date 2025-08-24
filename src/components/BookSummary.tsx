@@ -5,7 +5,7 @@ import { useEffect, useState } from 'react';
 import { submitBook } from '@/actions/submit-book.action';
 import { BookCreationOptions } from '@/types/book';
 
-export function BookPreview({bookCreationOptions} : {bookCreationOptions: BookCreationOptions}) {
+export function BookSummary({bookCreationOptions} : {bookCreationOptions: BookCreationOptions}) {
 
     const [creatingTextComplete, setCreatingTextComplete] = useState(false);
     const [text, setText] = useState("");
@@ -18,7 +18,7 @@ export function BookPreview({bookCreationOptions} : {bookCreationOptions: BookCr
 
         async function fetchData() {
 
-            const response = await fetch(`/api/generate-description`, {
+            const response = await fetch(`/api/generate-summary`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
