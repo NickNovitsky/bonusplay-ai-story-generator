@@ -15,6 +15,7 @@ export async function POST(request: Request) {
             { role: 'system',
                 content: `You are given an idea for children's fun book.
                 Using it create 10 items (theses) which briefly outline book structure. Each item must not exceed 10 words.
+                Separate items with line breaks;
                 Do not number items. Do not use fancy formatting, use regular text.`},
             { role: 'user', content: json.idea }
         ],
