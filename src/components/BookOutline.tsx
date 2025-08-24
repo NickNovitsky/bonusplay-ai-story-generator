@@ -37,7 +37,7 @@ function BookOutline({bookCreationOptions} : {bookCreationOptions: BookCreationO
                 
                 const chunk = decoder.decode(value, { stream: true });
                 text += chunk;
-                const storyItems = text.split(/\r\n|\r|\n/); // ChatGPT is instructed to separate streamed story items with line breaks
+                const storyItems = text.split(/\r\n|\r|\n/).filter(item => item !== ''); // ChatGPT is instructed to separate streamed story items with line breaks
                 setStoryItems(storyItems);
             } 
         }
