@@ -1,15 +1,17 @@
 'use client';
 
-import { Box, CardMedia, Typography } from "@mui/material";
+import { Box, CardMedia, Grid, Typography } from "@mui/material";
 import { useEffect, useState } from "react";
 import { Book } from "@/types/book";
 
 export default function BookComplete({book} : {book: Book}) {
 
-    const [text, setText] = useState(book.text);
+    const [text, setText] = useState(book.text || '');
     const [paragraphs, setParagraphs] = useState<string[]>([]);
 
     useEffect(() => {
+
+        const abortController = new AbortController();
     
         async function fetchText() {
 
@@ -18,7 +20,8 @@ export default function BookComplete({book} : {book: Book}) {
                 headers: {
                     'Content-Type': 'application/json'
                 },
-                body: JSON.stringify({id: book.id})
+                body: JSON.stringify({id: book.id}),
+                signal: abortController.signal
             });
 
             if (response.headers.get('Content-Type') === 'application/json') {
@@ -38,18 +41,29 @@ export default function BookComplete({book} : {book: Book}) {
             }
         }
 
-        if (!book.text) fetchText();                
+        if (!book.text) fetchText();
+
+        return () => {
+            abortController.abort();
+        }
+
     }, [book]);
 
     useEffect(() => {
-        const paragraphs = text && text.split('*') || [];
+        const paragraphs = text && text.split(/\r\n|\r|\n/).filter(p => p !== '') || [];
         setParagraphs(paragraphs);
     }, [text]);
 
     return (
-            <Box sx={{ textAlign: 'center', mt: 10, maxWidth: 600, mx: 'auto' }}>
-                <CardMedia component="img" image={book.coverImageUrl} sx={{height: 512, width: 512}} alt="Book cover" />
-                {paragraphs.map(p => <Typography key={p} sx={{textAlign: "left", mb: 1}}>{p}</Typography>)}
+            <Box sx={{ textAlign: 'center', mt: 10, maxWidth: 1280, mx: 'auto' }} bgcolor="#111927" p={1} borderRadius={3}>
+                <Grid container bgcolor="white">
+                    <Grid size={6}>
+                        <CardMedia component="img" image={book.coverImageUrl} sx={{height: 512, width: 512}} alt="Book cover" />
+                    </Grid>
+                    <Grid size={6}>
+                        {paragraphs.map((p, i) => <Typography key={i} sx={{textAlign: "left", mb: 1}}>{p}</Typography>)}
+                    </Grid>
+                </Grid>
             </Box>
         ) 
 }
