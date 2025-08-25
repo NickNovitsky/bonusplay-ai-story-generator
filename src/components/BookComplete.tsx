@@ -42,15 +42,14 @@ export default function BookComplete({book} : {book: Book}) {
         }
 
         if (!book.text) fetchText();
-
+        
         return () => {
             abortController.abort();
         }
-
     }, [book]);
 
     useEffect(() => {
-        const paragraphs = text && text.split(/\r\n|\r|\n/).filter(p => p !== '') || [];
+        const paragraphs = text && text.split(/\r\n|\r|\n/).filter(p => p.trim() !== '') || [];
         setParagraphs(paragraphs);
     }, [text]);
 
