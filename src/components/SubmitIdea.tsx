@@ -41,7 +41,7 @@ export default function SubmitIdea({ onSubmit } : { onSubmit: OnSubmitCallback }
                 </Typography>
 
                 <TextField
-                    label="What's your story idea?"
+                    label="e.g., A child and their pet go on a magical adventure."
                     required
                     multiline
                     minRows={5}
