@@ -16,7 +16,7 @@ export async function POST(request: Request) {
             { role: 'system',
                 content: `You are given an outline for children's fun book.
                 Using it as a reference create a complete story consisting of 10-15 paragraphs.
-                Do not use fancy formatting, use regular text. Separate paragraphs with single asterisks.`},
+                Do not use fancy formatting, use regular text. Separate paragraphs with line breaks.`},
             { role: 'user', content: `${book.workflow.outline}` }
         ],
         stream: true
