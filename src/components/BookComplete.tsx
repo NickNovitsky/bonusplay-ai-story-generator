@@ -49,7 +49,7 @@ export default function BookComplete({book} : {book: Book}) {
     }, [book]);
 
     useEffect(() => {
-        const paragraphs = text && text.split('*') || [];
+        const paragraphs = text && text.split(/\r\n|\r|\n/).filter(p => p.trim() !== '') || [];
         setParagraphs(paragraphs);
     }, [text]);
 
