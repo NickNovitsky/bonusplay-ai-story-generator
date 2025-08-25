@@ -1,10 +1,11 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
-import { ThemeProvider } from "@mui/material";
+import { Box, ThemeProvider } from "@mui/material";
 import { AppRouterCacheProvider } from "@mui/material-nextjs/v15-appRouter";
 import theme from "./theme";
 import SiteHeader from "@/components/SiteHeader";
+import SiteFooter from "@/components/SiteFooter";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -22,8 +23,11 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
       <body className={`${inter.variable} antialiased`}>
         <AppRouterCacheProvider>
           <ThemeProvider theme={theme}>
-            <SiteHeader />   
-            {children}
+            <SiteHeader />
+            <Box mb={10}>
+                {children}
+            </Box>
+            <SiteFooter />
           </ThemeProvider>
         </AppRouterCacheProvider>
       </body>
