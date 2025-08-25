@@ -10,6 +10,8 @@ export default function BookComplete({book} : {book: Book}) {
     const [paragraphs, setParagraphs] = useState<string[]>([]);
 
     useEffect(() => {
+
+        const abortController = new AbortController();
     
         async function fetchText() {
 
@@ -18,7 +20,8 @@ export default function BookComplete({book} : {book: Book}) {
                 headers: {
                     'Content-Type': 'application/json'
                 },
-                body: JSON.stringify({id: book.id})
+                body: JSON.stringify({id: book.id}),
+                signal: abortController.signal
             });
 
             if (response.headers.get('Content-Type') === 'application/json') {
@@ -38,7 +41,11 @@ export default function BookComplete({book} : {book: Book}) {
             }
         }
 
-        if (!book.text) fetchText();                
+        if (!book.text) fetchText();
+        
+        return () => {
+            abortController.abort();
+        }
     }, [book]);
 
     useEffect(() => {
