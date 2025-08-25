@@ -6,7 +6,7 @@ import { Book } from "@/types/book";
 
 export default function BookComplete({book} : {book: Book}) {
 
-    const [text, setText] = useState(book.text || '');
+    const [text, setText] = useState(book.text);
     const [paragraphs, setParagraphs] = useState<string[]>([]);
 
     useEffect(() => {
@@ -49,7 +49,7 @@ export default function BookComplete({book} : {book: Book}) {
     return (
             <Box sx={{ textAlign: 'center', mt: 10, maxWidth: 600, mx: 'auto' }}>
                 <CardMedia component="img" image={book.coverImageUrl} sx={{height: 512, width: 512}} alt="Book cover" />
-                {paragraphs.map((p, i) => <Typography key={i} sx={{textAlign: "left", mb: 1}}>{p}</Typography>)}
+                {paragraphs.map(p => <Typography key={p} sx={{textAlign: "left", mb: 1}}>{p}</Typography>)}
             </Box>
         ) 
 }
