@@ -5,6 +5,7 @@ import { Book } from "@/types/book";
 import { CardMedia, Typography } from "@mui/material";
 import Box from "@mui/material/Box";
 import { PostgrestSingleResponse } from "@supabase/supabase-js";
+import { notFound } from "next/navigation";
 
 type PageParams = {
     params: Promise<{ id: string }>
@@ -18,6 +19,10 @@ async function Page({params} : PageParams) {
 
     if (error) {
         console.info("Book page error:", error);
+        switch (error.code) {
+            case 'PGRST116':
+                return notFound();
+        }
         return <Typography>Failed to obtain book data</Typography>
     }
 
