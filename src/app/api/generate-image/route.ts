@@ -28,17 +28,20 @@ export async function POST(req: NextRequest) {
     • Child-friendly, cohesive design with a clear focal character.
     `;
 
-  const dalleRes = await openai.images.generate({
-    model: 'dall-e-3',
-    prompt: formattedPrompt,
-    style: 'natural',
-    size: '1024x1024',
-    quality: 'standard',
-    n: 1
-  })
-
-  const url = dalleRes.data![0].url
-  return NextResponse.json({ url });
+    try {
+        const dalleRes = await openai.images.generate({
+            model: 'dall-e-3',
+            prompt: formattedPrompt,
+            style: 'natural',
+            size: '1024x1024',
+            quality: 'standard',
+            n: 1
+        });
+        const url = dalleRes.data![0].url
+        return NextResponse.json({ url });
+    } catch (e) {
+        console.error('ERROR: Error generating image', e);
+    }
 }
 
 const clean = (s: string) =>

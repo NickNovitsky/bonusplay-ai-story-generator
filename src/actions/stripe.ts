@@ -15,7 +15,7 @@ export async function createCheckoutSession(bookId: string) {
         metadata: {
             book_id: bookId,
         },
-        success_url: `${process.env.BASE_URL}/thankyou?bookId=${bookId}`,
+        success_url: `${process.env.BASE_URL}/book/${bookId}`,
         cancel_url: `${process.env.BASE_URL}/`,
     });
 

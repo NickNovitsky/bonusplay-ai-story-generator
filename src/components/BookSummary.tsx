@@ -11,6 +11,7 @@ export function BookSummary({bookCreationOptions} : {bookCreationOptions: BookCr
     const [text, setText] = useState("");
     const [coverImageUrl, setCoverImageUrl] = useState("");
     const [coverImageError, setCoverImageError] = useState(false);
+    const [isSubmitting, setIsSubmitting] = useState(false);
 
     useEffect(() => {
 
@@ -82,6 +83,12 @@ export function BookSummary({bookCreationOptions} : {bookCreationOptions: BookCr
         )
     }
 
+    async function handleSubmitBookClick() {
+        if (isSubmitting) return;
+        setIsSubmitting(true);
+        await submitBook(bookCreationOptions.idea, text, coverImageUrl);
+    }
+
     return (
         <Box sx={{ mt: 10, maxWidth: 1280, mx: 'auto' }} className="rounded-lg shadow-lg">
             <Grid container spacing={2} padding={2}>
@@ -98,7 +105,7 @@ export function BookSummary({bookCreationOptions} : {bookCreationOptions: BookCr
                     <Typography>Just $9.99 with 7-day ‘love it’ guarantee</Typography>
                     { creatingTextComplete && coverImageUrl &&
                     <>                    
-                    <Button variant="contained" fullWidth sx={{ mt: 3 }} onClick={() => submitBook(bookCreationOptions.idea, text, coverImageUrl)}>Get My Book Now – $9.99</Button>
+                    <Button variant="contained" fullWidth sx={{ mt: 3 }} onClick={handleSubmitBookClick}>{ isSubmitting && "Wait..." || "Get My Book Now – $9.99" }</Button>
                     <Typography>(Safe, secure checkout in seconds)</Typography>
                     <Link href="/">Back to the story creation page</Link>
                     </>
