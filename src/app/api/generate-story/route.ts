@@ -1,23 +1,28 @@
 import openai from "@/lib/openai";
 import { NextResponse } from "next/server";
 import { supabase } from "@/lib/supabase";
+import { PostgrestSingleResponse } from "@supabase/supabase-js";
+import { Book } from "@/types/book";
 
 export async function POST(request: Request) {
 
     const json = await request.json();
 
-    const { data: book } = await supabase.from('books').select('*').eq('id', json.id).single();
+    const { data: book, error } : PostgrestSingleResponse<Book> = await supabase.from('books').select('*').eq('id', json.id).single();
 
-    if (!book) return NextResponse.json({error: {message: "No book with specified ID"}}, {status: 500});
+    if (error) return NextResponse.json({ error: { message: 'Book not found'}}, { status: 400 });
+
+    if (!book.workflow.summary && !book.workflow.outline) return NextResponse.json({ error: { message: 'No summary or outline found'}}, { status: 500 });
 
     const gptResponse = await openai.chat.completions.create({
         model: 'gpt-4-turbo',
         messages: [
             { role: 'system',
-                content: `You are given an outline for children's fun book.
-                Using it as a reference create a complete story consisting of 10-15 paragraphs.
-                Do not use fancy formatting, use regular text. Separate paragraphs with line breaks.`},
-            { role: 'user', content: `${book.workflow.outline}` }
+                content: `You are given a summary of children's fun book.
+                Using it as a reference create a complete story consisting of 10 paragraphs.
+                Do not create title. Do not use fancy formatting, use regular text.
+                Separate paragraphs with line breaks.`},
+            { role: 'user', content: `${book.workflow.summary || book.workflow.outline}` }
         ],
         stream: true
     });
