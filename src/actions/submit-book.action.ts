@@ -3,23 +3,22 @@
 import { supabase } from "@/lib/supabase";
 import { redirect } from "next/navigation";
 import stripe from "@/lib/stripe";
+import { NextResponse } from "next/server";
 
-export async function submitBook(idea: string, outline: string, coverImageUrl: string | null) {
+export async function submitBook(bookId: string, outline?: string) {
 
-    const workflow = {
-        idea: idea,
-        outline: outline
-    }
+    const { data: book, error } = await supabase.from('books').select('*').eq('id', bookId).single();
+      
+    if (error) return NextResponse.json({ error: { message: 'Book not found'}}, { status: 400 });
 
-    const { data, error } = await supabase.from('books').insert({workflow, coverImageUrl}).select().single();
-    
-    if (error) {
-        console.error('Supabase insert error:', error);
-        //controller.enqueue(encoder.encode("{BOOK ID ERROR}"));
-    }
+    const { workflow } = book;
 
-    if (data) {
-        //controller.enqueue(encoder.encode(`{BOOK ID ${data.id}}`));
+    if (outline && workflow.type === 'outline') {
+        workflow.outline = outline;
+        const { error } = await supabase.from('books').update({ workflow }).eq('id', bookId);
+        if (error) {
+            console.error('Supabase update error:', error);
+        }
     }
 
     const session = await stripe.checkout.sessions.create({
@@ -31,9 +30,9 @@ export async function submitBook(idea: string, outline: string, coverImageUrl: s
             },
         ],
         metadata: {
-            book_id: data.id,
+            book_id: bookId,
         },
-        success_url: `${process.env.BASE_URL}/book/${data.id}`,
+        success_url: `${process.env.BASE_URL}/book/${bookId}`,
         cancel_url: `${process.env.BASE_URL}/`,
     });
 

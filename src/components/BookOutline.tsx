@@ -33,7 +33,7 @@ function BookOutline({ book } : { book: Book }) {
         if (isSubmitting) return;
         setIsSubmitting(true);
         const outline = storyItems.join('\n'); // TODO: Refactor so that outline is grabbed from inputs (use form submit?)
-        await submitBook(book.workflow.idea, outline, coverImageUrl);
+        await submitBook(book.id, outline);
     }
 
     return (

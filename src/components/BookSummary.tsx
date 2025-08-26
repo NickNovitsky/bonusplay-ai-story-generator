@@ -27,7 +27,7 @@ export function BookSummary({ book } : { book: Book }) {
     async function handleSubmitBookClick() {
         if (isSubmitting) return;
         setIsSubmitting(true);
-        await submitBook(book.workflow.idea, text, coverImageUrl);
+        await submitBook(book.id);
     }
 
     return (
