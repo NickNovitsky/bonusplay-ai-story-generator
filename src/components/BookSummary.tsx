@@ -1,66 +1,17 @@
 'use client'
 
 import { Typography, CardMedia, Box, Button, Grid, CircularProgress, Container, Link } from '@mui/material';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { submitBook } from '@/actions/submit-book.action';
 import { Book } from '@/types/book';
 import { useImageGeneration } from '@/hooks/useImageGeneration';
+import { useSummaryGeneration } from '@/hooks/useSummaryGeneration';
 
 export function BookSummary({ book } : { book: Book }) {
 
-    const [creatingTextComplete, setCreatingTextComplete] = useState(false);
-    const [text, setText] = useState("");
     const [isSubmitting, setIsSubmitting] = useState(false);
-
+    const { text, creatingTextComplete } = useSummaryGeneration(book);
     const { coverImageUrl, coverImageError } = useImageGeneration(book);
-
-    useEffect(() => {
-
-        const abortController = new AbortController();
-
-        async function fetchData() {
-
-            if (book.workflow.summary) {
-                setText(book.workflow.summary);
-                setCreatingTextComplete(true);
-                return;
-            }
-
-            const response = await fetch(`/api/generate-summary`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({ book_id: book.id }),
-                signal: abortController.signal
-            });
-
-            if (response.headers.get('Content-Type') === 'application/json') {
-                setText("Failed to obtain response");
-                setCreatingTextComplete(true);
-                return;
-            }
-
-            const reader = response.body!.getReader();
-            const decoder = new TextDecoder();
-
-            while (true) {
-                const { done, value } = await reader.read();
-                if (done) break;
-                
-                const chunk = decoder.decode(value, { stream: true });
-                setText(prev => prev + chunk);
-            } 
-            setCreatingTextComplete(true);
-        }
-
-        fetchData();
-
-        return () => {
-            abortController.abort();
-        }
-        
-    }, [book]);
 
     function composeCoverComponent() {
         if (coverImageUrl) return <CardMedia component="img" image={ coverImageUrl } className="object-cover" alt="Book cover" />
