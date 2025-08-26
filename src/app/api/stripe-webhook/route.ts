@@ -22,7 +22,7 @@ export async function POST(req: NextRequest) {
       if (bookId) {
         await supabase
           .from('books')
-          .update({ is_paid: true })
+          .update({ is_paid: true, user_email: session.customer_details?.email })
           .eq('id', bookId)
       }
     }
