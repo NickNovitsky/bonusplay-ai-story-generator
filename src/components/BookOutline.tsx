@@ -5,7 +5,7 @@ import { Book } from '@/types/book';
 import { Box, Typography, Button, Grid, Container, CircularProgress, Link, TextField, CardMedia } from '@mui/material';
 import { useEffect, useState } from 'react';
 
-function BookOutline({bookId, book} : {bookId: string, book: Book}) {
+function BookOutline({ book } : { book: Book }) {
 
     const [storyItems, setStoryItems] = useState<string[]>([]);
     const [coverImageUrl, setCoverImageUrl] = useState("");
@@ -31,7 +31,7 @@ function BookOutline({bookId, book} : {bookId: string, book: Book}) {
                 headers: {
                     'Content-Type': 'application/json'
                 },
-                body: JSON.stringify({ book_id: bookId }),
+                body: JSON.stringify({ book_id: book.id }),
                 signal: abortController.signal
             });
 
@@ -58,7 +58,7 @@ function BookOutline({bookId, book} : {bookId: string, book: Book}) {
                 headers: {
                     'Content-Type': 'application/json'
                 },
-                body: JSON.stringify({ book_id: bookId }),
+                body: JSON.stringify({ book_id: book.id }),
                 signal: abortController.signal
             });
             if (!response.ok) {
@@ -75,7 +75,7 @@ function BookOutline({bookId, book} : {bookId: string, book: Book}) {
             abortController.abort();
         }
         
-    }, [bookId, book]);
+    }, [book]);
 
     function composeCoverComponent() {
         if (coverImageUrl) return <CardMedia component="img" image={ coverImageUrl } className="object-cover" alt="Book cover" />

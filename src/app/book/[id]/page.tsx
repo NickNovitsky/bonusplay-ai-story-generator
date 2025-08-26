@@ -28,9 +28,9 @@ async function Page({params} : PageParams) {
 
     if (book.is_paid) return <BookComplete book={ book } />
 
-    if (book.workflow.type === 'summary') return <BookSummary bookId={ id } book={ book } />
+    if (book.workflow.type === 'summary') return <BookSummary book={ book } />
 
-    if (book.workflow.type === 'outline') return <BookOutline bookId={ id } book={ book } />
+    if (book.workflow.type === 'outline') return <BookOutline book={ book } />
 }
 
 export default Page;

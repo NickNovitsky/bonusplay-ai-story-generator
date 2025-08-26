@@ -5,7 +5,7 @@ import { useEffect, useState } from 'react';
 import { submitBook } from '@/actions/submit-book.action';
 import { Book } from '@/types/book';
 
-export function BookSummary({bookId, book} : {bookId: string, book: Book}) {
+export function BookSummary({ book } : { book: Book }) {
 
     const [creatingTextComplete, setCreatingTextComplete] = useState(false);
     const [text, setText] = useState("");
@@ -30,7 +30,7 @@ export function BookSummary({bookId, book} : {bookId: string, book: Book}) {
                 headers: {
                     'Content-Type': 'application/json'
                 },
-                body: JSON.stringify({ book_id: bookId }),
+                body: JSON.stringify({ book_id: book.id }),
                 signal: abortController.signal
             });
 
@@ -62,7 +62,7 @@ export function BookSummary({bookId, book} : {bookId: string, book: Book}) {
                 headers: {
                     'Content-Type': 'application/json'
                 },
-                body: JSON.stringify({ book_id: bookId }),
+                body: JSON.stringify({ book_id: book.id }),
                 signal: abortController.signal
             });
             if (!response.ok) {
@@ -79,7 +79,7 @@ export function BookSummary({bookId, book} : {bookId: string, book: Book}) {
             abortController.abort();
         }
         
-    }, [bookId, book]);
+    }, [book]);
 
     function composeCoverComponent() {
         if (coverImageUrl) return <CardMedia component="img" image={ coverImageUrl } className="object-cover" alt="Book cover" />
