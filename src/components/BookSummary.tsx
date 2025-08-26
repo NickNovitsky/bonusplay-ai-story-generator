@@ -31,7 +31,7 @@ export function BookSummary({ book } : { book: Book }) {
     }
 
     return (
-        <Box sx={{ mt: 10, maxWidth: 1280, mx: 'auto' }} className="rounded-lg shadow-lg">
+        <Box sx={{ maxWidth: 1280, mx: 'auto' }} className="rounded-lg shadow-lg">
             <Grid container spacing={2} padding={2}>
                 <Grid size={4}>
                     <Container className="aspect-square rounded-lg overflow-hidden">
