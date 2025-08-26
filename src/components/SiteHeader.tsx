@@ -8,9 +8,9 @@ function SiteHeader() {
     <Container>
         <Grid container py={8}>
             <Grid>
-                <Link href="/">
+                <NextLink href="/">
                     <Image src="/bonusplay-logo-full.svg" width={166} height={30} alt="BonusPlay Logo" />
-                </Link>
+                </NextLink>
             </Grid>
             <Grid size="grow" sx={{ textAlign: "right" }}>
                 <Link component={NextLink} variant='body2' ml={1} href="/about" sx={{ textDecoration: 'none', color: '#111927' }}>About</Link>
