@@ -13,9 +13,9 @@ const checkboxLabel = (
     </Stack>
 );
 
-type OnSubmitCallback = (bookCreationOptions: BookCreationOptions, allowEdit: boolean) => void;
+type OnSubmitCallback = (bookCreationOptions: BookCreationOptions) => void;
 
-export default function SubmitIdea({ onSubmit } : { onSubmit: OnSubmitCallback }) {
+export default function SubmitIdea({ isSubmitting, onSubmit } : { isSubmitting: boolean, onSubmit: OnSubmitCallback }) {
 
     const [idea, setIdea] = useState("");
     const [deliveryFormat, setDeliveryFormat] = useState("pdf");
@@ -28,9 +28,10 @@ export default function SubmitIdea({ onSubmit } : { onSubmit: OnSubmitCallback }
 
     function handleSubmit() {
         const bookCreationOptions: BookCreationOptions = {
-            idea, deliveryFormat, layout, artStyle, mood, lighting, colorPalette
+            idea, deliveryFormat, layout, artStyle, mood, lighting, colorPalette,
+            type: allowEdit ? 'outline' : 'summary'
         }
-        onSubmit(bookCreationOptions, allowEdit);
+        onSubmit(bookCreationOptions);
     }
 
     return (
@@ -141,7 +142,7 @@ export default function SubmitIdea({ onSubmit } : { onSubmit: OnSubmitCallback }
                 </Grid>
 
                 <Stack spacing={2} justifyContent="right" sx={{ mt: 4 }}>
-                    <Button variant="contained" onClick={() => handleSubmit()}>✦ Create my story</Button>
+                    <Button variant="contained" onClick={() => handleSubmit()} disabled={ isSubmitting }>{ isSubmitting && "Creating..." || "✦ Create my story" }</Button>
                     <FormControlLabel control={<Checkbox checked={allowEdit} onChange={e => setAllowEdit(e.target.checked)}/>} label={checkboxLabel} />
                 </Stack>
             </Stack>

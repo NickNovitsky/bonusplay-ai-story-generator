@@ -1,13 +1,20 @@
 import openai from "@/lib/openai";
+import { supabase } from "@/lib/supabase";
+import { Book } from "@/types/book";
+import { PostgrestSingleResponse } from "@supabase/supabase-js";
 import { NextResponse } from "next/server";
 
 export async function POST(request: Request) {
 
-    const json = await request.json();
+    // TODO: Validate request parameters
 
-    //const { data: book } = await supabase.from('books').select('*').eq('id', id).single();
+    const { book_id } = await request.json();
 
-    //const idea = book.workflow.idea;
+    const { data: book, error } : PostgrestSingleResponse<Book> = await supabase.from('books').select('*').eq('id', book_id).single();
+
+    if (error) return NextResponse.json({ error: { message: 'Book not found'}}, { status: 400 });
+
+    // TODO: If book already contains summary, return it
 
     try {
 
@@ -21,7 +28,7 @@ export async function POST(request: Request) {
                   Then include a description for book cover consisting of no more than five words,
                   suitable for providing it to image generation service, separated from further text with an asterisk.
                   Do not use fancy formatting, use regular text.`},
-              { role: 'user', content: json.idea }
+              { role: 'user', content: book.workflow.idea }
           ],
           stream: true
       });
@@ -29,10 +36,21 @@ export async function POST(request: Request) {
       const stream = new ReadableStream({
         async start(controller) {
           const encoder = new TextEncoder();
+          let fullResponse = '';
           for await (const chunk of gptResponse) {
             const content = chunk.choices[0]?.delta?.content || '';
+            fullResponse += content;
             controller.enqueue(encoder.encode(content));
           }
+
+          book.workflow.summary = fullResponse;
+
+          const { error } = await supabase.from('books').update({ workflow: book.workflow }).eq('id', book_id);
+
+          if (error) {
+                console.error('Supabase update error:', error);
+                //controller.enqueue(encoder.encode("{BOOK ID ERROR}"));
+            }
           
           controller.close();
         }

@@ -6,13 +6,14 @@ export type Book = {
     workflow: BookWorkflow
 }
 
-export type BookWorkflow = {
-    idea: string,
+export type BookWorkflow = BookCreationOptions & {
+    summary: string,
     outline: string
 }
 
 export type BookCreationOptions = {
     idea: string,
+    type: 'summary' | 'outline',
     deliveryFormat: string,
     layout: string,
     artStyle: string,

@@ -1,11 +1,11 @@
 "use client"
 
 import { submitBook } from '@/actions/submit-book.action';
-import { BookCreationOptions } from '@/types/book';
+import { Book } from '@/types/book';
 import { Box, Typography, Button, Grid, Container, CircularProgress, Link, TextField, CardMedia } from '@mui/material';
 import { useEffect, useState } from 'react';
 
-function BookOutline({bookCreationOptions} : {bookCreationOptions: BookCreationOptions}) {
+function BookOutline({bookId, book} : {bookId: string, book: Book}) {
 
     const [storyItems, setStoryItems] = useState<string[]>([]);
     const [coverImageUrl, setCoverImageUrl] = useState("");
@@ -18,6 +18,12 @@ function BookOutline({bookCreationOptions} : {bookCreationOptions: BookCreationO
 
         async function fetchData() {
 
+            if (book.workflow.outline) {
+                const storyItems = book.workflow.outline.split(/\r\n|\r|\n/).filter(item => item !== ''); // Outline is expected to be line break separated
+                setStoryItems(storyItems);
+                return;
+            }
+
             let text = "";
 
             const response = await fetch(`/api/generate-outline`, {
@@ -25,7 +31,7 @@ function BookOutline({bookCreationOptions} : {bookCreationOptions: BookCreationO
                 headers: {
                     'Content-Type': 'application/json'
                 },
-                body: JSON.stringify({ idea: bookCreationOptions.idea}),
+                body: JSON.stringify({ book_id: bookId }),
                 signal: abortController.signal
             });
 
@@ -44,12 +50,15 @@ function BookOutline({bookCreationOptions} : {bookCreationOptions: BookCreationO
         }
 
         async function generateImage() {
+            if (book.coverImageUrl) {
+                return setCoverImageUrl(book.coverImageUrl);
+            }
             const response = await fetch(`/api/generate-image`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
                 },
-                body: JSON.stringify(bookCreationOptions),
+                body: JSON.stringify({ book_id: bookId }),
                 signal: abortController.signal
             });
             if (!response.ok) {
@@ -66,7 +75,7 @@ function BookOutline({bookCreationOptions} : {bookCreationOptions: BookCreationO
             abortController.abort();
         }
         
-    }, [bookCreationOptions]);
+    }, [bookId, book]);
 
     function composeCoverComponent() {
         if (coverImageUrl) return <CardMedia component="img" image={ coverImageUrl } className="object-cover" alt="Book cover" />
@@ -87,7 +96,7 @@ function BookOutline({bookCreationOptions} : {bookCreationOptions: BookCreationO
         if (isSubmitting) return;
         setIsSubmitting(true);
         const outline = storyItems.join('\n'); // TODO: Refactor so that outline is grabbed from inputs (use form submit?)
-        await submitBook(bookCreationOptions.idea, outline, coverImageUrl);
+        await submitBook(book.workflow.idea, outline, coverImageUrl);
     }
 
     return (

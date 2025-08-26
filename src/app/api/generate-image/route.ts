@@ -1,15 +1,20 @@
 import { NextRequest, NextResponse } from 'next/server'
 import openai from '@/lib/openai';
+import { supabase } from '@/lib/supabase';
 
 export async function POST(req: NextRequest) {
 
-  // TODO: Validate input parameters
+    // TODO: Validate input parameters
 
-  const json = await req.json();
+    const { book_id } = await req.json();
 
-  const { idea, artStyle, mood, lighting, colorPalette } = json;
+    const { data: book, error } = await supabase.from('books').select('*').eq('id', book_id).single();
+  
+    if (error) return NextResponse.json({ error: { message: 'Book not found'}}, { status: 400 });
 
-  const formattedPrompt = ` 
+    const { idea, artStyle, mood, lighting, colorPalette } = book.workflow;
+
+    const formattedPrompt = ` 
     Create the FINAL FLAT 2D FRONT COVER ARTWORK for a children's picture book.
     Subject: ${clean(idea)} 
     
@@ -38,6 +43,14 @@ export async function POST(req: NextRequest) {
             n: 1
         });
         const url = dalleRes.data![0].url
+
+        const { error } = await supabase.from('books').update({ coverImageUrl: url }).eq('id', book_id);
+
+        if (error) {
+            console.error('Supabase update error:', error);
+            //controller.enqueue(encoder.encode("{BOOK ID ERROR}"));
+        }
+
         return NextResponse.json({ url });
     } catch (e) {
         console.error('ERROR: Error generating image', e);

@@ -1,9 +1,9 @@
 import BookComplete from "@/components/BookComplete";
-import UpgradeButton from "@/components/UpgradeButton";
+import BookOutline from "@/components/BookOutline";
+import { BookSummary } from "@/components/BookSummary";
 import { supabase } from "@/lib/supabase";
 import { Book } from "@/types/book";
-import { CardMedia, Typography } from "@mui/material";
-import Box from "@mui/material/Box";
+import { Typography } from "@mui/material";
 import { PostgrestSingleResponse } from "@supabase/supabase-js";
 import { notFound } from "next/navigation";
 
@@ -26,15 +26,11 @@ async function Page({params} : PageParams) {
         return <Typography>Failed to obtain book data</Typography>
     }
 
-    if (!book.is_paid) return (        
-            <Box sx={{ textAlign: 'center', mt: 10, maxWidth: 600, mx: 'auto' }}>
-                <CardMedia component="img" image={book.coverImageUrl} sx={{height: 512, width: 512}} alt="Book cover" />
-                <Typography>{book.workflow.outline}</Typography>
-                <UpgradeButton id={id} />
-            </Box>
-        )
+    if (book.is_paid) return <BookComplete book={ book } />
 
-    return <BookComplete book={book} />
+    if (book.workflow.type === 'summary') return <BookSummary bookId={ id } book={ book } />
+
+    if (book.workflow.type === 'outline') return <BookOutline bookId={ id } book={ book } />
 }
 
 export default Page;

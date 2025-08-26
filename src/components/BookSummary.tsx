@@ -3,9 +3,9 @@
 import { Typography, CardMedia, Box, Button, Grid, CircularProgress, Container, Link } from '@mui/material';
 import { useEffect, useState } from 'react';
 import { submitBook } from '@/actions/submit-book.action';
-import { BookCreationOptions } from '@/types/book';
+import { Book } from '@/types/book';
 
-export function BookSummary({bookCreationOptions} : {bookCreationOptions: BookCreationOptions}) {
+export function BookSummary({bookId, book} : {bookId: string, book: Book}) {
 
     const [creatingTextComplete, setCreatingTextComplete] = useState(false);
     const [text, setText] = useState("");
@@ -19,12 +19,18 @@ export function BookSummary({bookCreationOptions} : {bookCreationOptions: BookCr
 
         async function fetchData() {
 
+            if (book.workflow.summary) {
+                setText(book.workflow.summary);
+                setCreatingTextComplete(true);
+                return;
+            }
+
             const response = await fetch(`/api/generate-summary`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
                 },
-                body: JSON.stringify({idea: bookCreationOptions.idea}),
+                body: JSON.stringify({ book_id: bookId }),
                 signal: abortController.signal
             });
 
@@ -48,12 +54,15 @@ export function BookSummary({bookCreationOptions} : {bookCreationOptions: BookCr
         }
 
         async function generateImage() {
+            if (book.coverImageUrl) {
+                return setCoverImageUrl(book.coverImageUrl);
+            }
             const response = await fetch(`/api/generate-image`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
                 },
-                body: JSON.stringify(bookCreationOptions),
+                body: JSON.stringify({ book_id: bookId }),
                 signal: abortController.signal
             });
             if (!response.ok) {
@@ -70,7 +79,7 @@ export function BookSummary({bookCreationOptions} : {bookCreationOptions: BookCr
             abortController.abort();
         }
         
-    }, [bookCreationOptions]);
+    }, [bookId, book]);
 
     function composeCoverComponent() {
         if (coverImageUrl) return <CardMedia component="img" image={ coverImageUrl } className="object-cover" alt="Book cover" />
@@ -86,7 +95,7 @@ export function BookSummary({bookCreationOptions} : {bookCreationOptions: BookCr
     async function handleSubmitBookClick() {
         if (isSubmitting) return;
         setIsSubmitting(true);
-        await submitBook(bookCreationOptions.idea, text, coverImageUrl);
+        await submitBook(book.workflow.idea, text, coverImageUrl);
     }
 
     return (
