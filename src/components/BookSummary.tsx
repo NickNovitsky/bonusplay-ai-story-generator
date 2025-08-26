@@ -4,14 +4,15 @@ import { Typography, CardMedia, Box, Button, Grid, CircularProgress, Container, 
 import { useEffect, useState } from 'react';
 import { submitBook } from '@/actions/submit-book.action';
 import { Book } from '@/types/book';
+import { useImageGeneration } from '@/hooks/useImageGeneration';
 
 export function BookSummary({ book } : { book: Book }) {
 
     const [creatingTextComplete, setCreatingTextComplete] = useState(false);
     const [text, setText] = useState("");
-    const [coverImageUrl, setCoverImageUrl] = useState("");
-    const [coverImageError, setCoverImageError] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
+
+    const { coverImageUrl, coverImageError } = useImageGeneration(book);
 
     useEffect(() => {
 
@@ -53,27 +54,7 @@ export function BookSummary({ book } : { book: Book }) {
             setCreatingTextComplete(true);
         }
 
-        async function generateImage() {
-            if (book.coverImageUrl) {
-                return setCoverImageUrl(book.coverImageUrl);
-            }
-            const response = await fetch(`/api/generate-image`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({ book_id: book.id }),
-                signal: abortController.signal
-            });
-            if (!response.ok) {
-                return setCoverImageError(true);
-            }
-            const { url } = await response.json();
-            setCoverImageUrl(url);
-        }
-
         fetchData();
-        generateImage();
 
         return () => {
             abortController.abort();

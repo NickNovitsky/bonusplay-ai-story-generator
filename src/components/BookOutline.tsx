@@ -1,6 +1,7 @@
 "use client"
 
 import { submitBook } from '@/actions/submit-book.action';
+import { useImageGeneration } from '@/hooks/useImageGeneration';
 import { Book } from '@/types/book';
 import { Box, Typography, Button, Grid, Container, CircularProgress, Link, TextField, CardMedia } from '@mui/material';
 import { useEffect, useState } from 'react';
@@ -8,9 +9,9 @@ import { useEffect, useState } from 'react';
 function BookOutline({ book } : { book: Book }) {
 
     const [storyItems, setStoryItems] = useState<string[]>([]);
-    const [coverImageUrl, setCoverImageUrl] = useState("");
-    const [coverImageError, setCoverImageError] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
+
+    const { coverImageUrl, coverImageError } = useImageGeneration(book);
 
     useEffect(() => {
 
@@ -49,27 +50,7 @@ function BookOutline({ book } : { book: Book }) {
             } 
         }
 
-        async function generateImage() {
-            if (book.coverImageUrl) {
-                return setCoverImageUrl(book.coverImageUrl);
-            }
-            const response = await fetch(`/api/generate-image`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({ book_id: book.id }),
-                signal: abortController.signal
-            });
-            if (!response.ok) {
-                return setCoverImageError(true);
-            }
-            const { url } = await response.json();
-            setCoverImageUrl(url);
-        }
-
         fetchData();
-        generateImage();
 
         return () => {
             abortController.abort();
