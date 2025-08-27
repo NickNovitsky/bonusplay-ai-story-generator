@@ -32,7 +32,7 @@ export function useImageGeneration(book: Book) {
         generateImage();
 
         return () => {
-            abortController.abort();
+            abortController.abort('Component unmounted');
         }
         
     }, [book]);

@@ -45,7 +45,7 @@ export function useOutlineGeneration(book: Book) {
         fetchData();
 
         return () => {
-            abortController.abort();
+            abortController.abort('Component unmounted');
         }
         
     }, [book]);

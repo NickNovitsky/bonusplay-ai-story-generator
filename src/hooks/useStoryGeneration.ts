@@ -41,7 +41,7 @@ export function useStoryGeneration(book: Book) {
         if (!book.text) fetchText();
         
         return () => {
-            abortController.abort();
+            abortController.abort('Component unmounted');
         }
     }, [book]);
 
