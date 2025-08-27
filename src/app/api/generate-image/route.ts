@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import openai from '@/lib/openai';
 import { supabase } from '@/lib/supabase';
+import { BookWorkflow } from '@/types/book';
 
 export async function POST(req: NextRequest) {
 
@@ -12,11 +13,12 @@ export async function POST(req: NextRequest) {
   
     if (error) return NextResponse.json({ error: { message: 'Book not found'}}, { status: 400 });
 
-    const { idea, artStyle, mood, lighting, colorPalette } = book.workflow;
+    const { artStyle, mood, lighting, colorPalette } = book.workflow;
 
-    const formattedPrompt = ` 
-    Create the FINAL FLAT 2D FRONT COVER ARTWORK for a children's picture book.
-    Subject: ${clean(idea)} 
+    const bookCoverDescription = await generateImageGenerationPrompt(book.workflow);
+
+    /* const formattedPrompt = ` 
+    ${bookCoverDescription} 
     
     Visual art direction: 
     • Art style: ${artStyle.replaceAll('-', ' ')} 
@@ -31,7 +33,11 @@ export async function POST(req: NextRequest) {
     • No borders, spines, pages, drop shadows, or perspective tilt.
     • No text or typography; the title will be added later by the app.
     • Child-friendly, cohesive design with a clear focal character.
-    `;
+    `; */
+
+    const formattedPrompt = `${bookCoverDescription},
+        ${artStyle.replaceAll('-', ' ')}, ${mood.replaceAll('-', ' ')} mood,
+        ${lighting.replaceAll('-', ' ')} lighting, ${colorPalette.replaceAll('-', ' ')} colors`;
 
     try {
         const dalleRes = await openai.images.generate({
@@ -57,5 +63,19 @@ export async function POST(req: NextRequest) {
     }
 }
 
-const clean = (s: string) =>
-    String(s || '').replace(/[^\w\s,&\-\./]/g, '').trim();
+async function generateImageGenerationPrompt(workflow: BookWorkflow) {
+
+    const prompt = `You are given an idea for a children's book content.
+        Create a description for this idea illustration, consisting of just a few words.
+        Description must contain subject, action, and environment.`;
+   
+    const gptResponse = await openai.chat.completions.create({
+        model: 'gpt-4-turbo',
+        messages: [
+            { role: 'system', content: prompt},
+            { role: 'user', content: workflow.idea }
+        ]
+    });
+
+    return gptResponse.choices[0].message.content;
+}
