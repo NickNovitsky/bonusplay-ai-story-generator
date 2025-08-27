@@ -81,7 +81,7 @@ export default function SubmitIdea({ isSubmitting, onSubmit } : { isSubmitting: 
                                 <MenuItem value="pencil-sketch">Pencil Sketch</MenuItem>
                                 <MenuItem value="cartoon-style">Cartoon Style</MenuItem>
                                 <MenuItem value="cut-paper-collage">Cut Paper Collage</MenuItem>
-                                <MenuItem value="pastel-drawing">Pastel Drawing</MenuItem>
+                                <MenuItem value="pastel">Pastel Drawing</MenuItem>
                                 <MenuItem value="3d-rendered">3D Rendered Style</MenuItem>
                                 <MenuItem value="ink-and-wash">Ink & Wash</MenuItem>
                                 <MenuItem value="digital-art">Digital Art</MenuItem>
