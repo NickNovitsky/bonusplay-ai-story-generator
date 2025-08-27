@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import openai from '@/lib/openai';
 import { supabase } from '@/lib/supabase';
-import { BookWorkflow } from '@/types/book';
+import { PostgrestSingleResponse } from '@supabase/supabase-js';
+import { Book } from '@/types/book';
 
 export async function POST(req: NextRequest) {
 
@@ -9,35 +10,36 @@ export async function POST(req: NextRequest) {
 
     const { book_id } = await req.json();
 
-    const { data: book, error } = await supabase.from('books').select('*').eq('id', book_id).single();
+    const { data: book, error } : PostgrestSingleResponse<Book> = await supabase.from('books').select('*').eq('id', book_id).single();
   
     if (error) return NextResponse.json({ error: { message: 'Book not found'}}, { status: 400 });
 
-    const { artStyle, mood, lighting, colorPalette } = book.workflow;
+    const { idea, artStyle, mood, lighting, colorPalette: colorScheme } = book.workflow;
 
-    const bookCoverDescription = await generateImageGenerationPrompt(book.workflow);
+    const title = await generateTitleFromIdea(idea);
 
-    /* const formattedPrompt = ` 
-    ${bookCoverDescription} 
-    
-    Visual art direction: 
-    • Art style: ${artStyle.replaceAll('-', ' ')} 
-    • Mood: ${mood} 
-    • Lighting: ${lighting} 
-    • Color scheme: ${colorPalette} 
-    
-    Composition requirements:
-    • Full-bleed illustration that fills the entire canvas edge-to-edge.
-    • Straight-on view (0°). NOT a 3D book, NOT a mockup, NOT a scene, NOT a photograph.
-    • Do NOT include any surrounding objects or props: no tables, palettes, paints, pencils, brushes, frames, hands, books, or devices.
-    • No borders, spines, pages, drop shadows, or perspective tilt.
-    • No text or typography; the title will be added later by the app.
-    • Child-friendly, cohesive design with a clear focal character.
-    `; */
+    const formattedPrompt = ` 
+    TASK: Create the FINAL FLAT 2D FRONT COVER for a children's picture book.
+    Subject / scene: ${idea}.
+    Art style: ${artStyle}.
+    Mood: ${mood}.
+    Lighting: ${lighting}.
+    Color scheme: ${colorScheme}.
 
-    const formattedPrompt = `${bookCoverDescription},
-        ${artStyle.replaceAll('-', ' ')}, ${mood.replaceAll('-', ' ')} mood,
-        ${lighting.replaceAll('-', ' ')} lighting, ${colorPalette.replaceAll('-', ' ')} colors`;
+    Typography & title rules:
+    • Render the EXACT title text on the cover: "${title}" (use the exact spelling & capitalization).
+    • Stylize the title text to match the art style (e.g., hand-lettered or decorative typography consistent with ${artStyle} and ${mood}).
+    • Keep the title highly legible at thumbnail size; ensure strong contrast with the background.
+    • No other text, labels, logos, watermarks, UI elements, or captions.
+
+    Composition rules:
+    • Full-bleed illustration that fills the canvas edge-to-edge; straight-on (0°).
+    • DO NOT depict a 3D book, mockup, desk, tabletop, frames, borders, spines, page edges, or perspective tilt.
+    • DO NOT include any props or art tools: no palettes, paints, pencils, pens, brushes, erasers, paper, or stationery.
+    • Keep a clear focal character/scene; avoid clutter behind the title area.
+    • Child-friendly, cohesive, inviting look suited to a picture book.
+    STRICT OVERRIDE: Flat, head-on 2D cover only. Absolutely no surrounding objects or surfaces or photography-style staging.
+    `;
 
     try {
         const dalleRes = await openai.images.generate({
@@ -63,17 +65,16 @@ export async function POST(req: NextRequest) {
     }
 }
 
-async function generateImageGenerationPrompt(workflow: BookWorkflow) {
+async function generateTitleFromIdea(idea: string) {
 
     const prompt = `You are given an idea for a children's book content.
-        Create a description for this idea illustration, consisting of just a few words.
-        Description must contain subject, action, and environment.`;
+        Create a title for this book`;
    
     const gptResponse = await openai.chat.completions.create({
         model: 'gpt-4-turbo',
         messages: [
             { role: 'system', content: prompt},
-            { role: 'user', content: workflow.idea }
+            { role: 'user', content: idea }
         ]
     });
 
