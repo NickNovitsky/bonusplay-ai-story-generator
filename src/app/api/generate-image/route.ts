@@ -3,6 +3,8 @@ import openai from '@/lib/openai';
 import { supabase } from '@/lib/supabase';
 import { PostgrestSingleResponse } from '@supabase/supabase-js';
 import { Book } from '@/types/book';
+import { base64ToBlob } from '@/lib/utils';
+import { randomUUID } from 'node:crypto';
 
 export async function POST(req: NextRequest) {
 
@@ -16,8 +18,6 @@ export async function POST(req: NextRequest) {
 
     const { idea, artStyle, mood, lighting, colorPalette: colorScheme } = book.workflow;
 
-    const title = await generateTitleFromIdea(idea);
-
     const formattedPrompt = ` 
     TASK: Create the FINAL FLAT 2D FRONT COVER for a children's picture book.
     Subject / scene: ${idea}.
@@ -27,10 +27,7 @@ export async function POST(req: NextRequest) {
     Color scheme: ${colorScheme}.
 
     Typography & title rules:
-    • Render the EXACT title text on the cover: "${title}" (use the exact spelling & capitalization).
-    • Stylize the title text to match the art style (e.g., hand-lettered or decorative typography consistent with ${artStyle} and ${mood}).
-    • Keep the title highly legible at thumbnail size; ensure strong contrast with the background.
-    • No other text, labels, logos, watermarks, UI elements, or captions.
+    • No text, labels, logos, watermarks, UI elements, or captions.
 
     Composition rules:
     • Full-bleed illustration that fills the canvas edge-to-edge; straight-on (0°).
@@ -42,41 +39,43 @@ export async function POST(req: NextRequest) {
     `;
 
     try {
-        const dalleRes = await openai.images.generate({
-            model: 'dall-e-3',
+        const imageResponse = await openai.images.generate({
+            model: book.workflow.imageModel,
             prompt: formattedPrompt,
-            style: 'natural',
+            style: book.workflow.imageModel === 'dall-e-3' && 'natural' || undefined,
             size: '1024x1024',
-            quality: 'standard',
-            n: 1
+            quality: book.workflow.imageModel === 'dall-e-3' && 'standard' || 'low',
+            n: 1,
+            response_format: book.workflow.imageModel === 'dall-e-3' && 'b64_json' || undefined
         });
-        const url = dalleRes.data![0].url
 
-        const { error } = await supabase.from('books').update({ coverImageUrl: url }).eq('id', book_id);
+        const b64Json = imageResponse.data && imageResponse.data[0].b64_json;
+        
+        if (!b64Json) throw new Error('Unexpected response');
+    
+        const uploadResponse = await uploadToSupabase(b64Json, `${randomUUID()}.jpg`);
+            
+        if (uploadResponse.error) {
+            throw new Error(uploadResponse.error.message);
+        }
+        
+        const { data } = supabase.storage.from('images').getPublicUrl(uploadResponse.data.path);
 
         if (error) {
             console.error('Supabase update error:', error);
             //controller.enqueue(encoder.encode("{BOOK ID ERROR}"));
         }
 
-        return NextResponse.json({ url });
+        return NextResponse.json({ url: data.publicUrl });
     } catch (e) {
         console.error('ERROR: Error generating image', e);
     }
 }
 
-async function generateTitleFromIdea(idea: string) {
-
-    const prompt = `You are given an idea for a children's book content.
-        Create a title for this book`;
-   
-    const gptResponse = await openai.chat.completions.create({
-        model: 'gpt-4-turbo',
-        messages: [
-            { role: 'system', content: prompt},
-            { role: 'user', content: idea }
-        ]
-    });
-
-    return gptResponse.choices[0].message.content;
-}
+const uploadToSupabase = async (b64Data: string, fileName: string) => {
+    // Convert base64 to blob
+    const blob = base64ToBlob(b64Data, 'image/jpg');
+    
+    // Upload to Supabase Storage
+    return await supabase.storage.from('images').upload(fileName, blob, { contentType: 'image/png', upsert: false });
+  };

@@ -1,5 +1,5 @@
 import { BookCreationOptions } from "@/types/book";
-import { Button, Checkbox, Container, FormControl, FormControlLabel, Grid, InputLabel, MenuItem, Select, Stack, styled, TextField, Typography } from "@mui/material";
+import { Button, Checkbox, Container, FormControl, FormControlLabel, FormLabel, Grid, InputLabel, MenuItem, Radio, RadioGroup, Select, Stack, styled, TextField, Typography } from "@mui/material";
 import { useState } from "react";
 
 const ColoredText = styled('span')(({ theme }) => ({
@@ -26,10 +26,14 @@ export default function SubmitIdea({ isSubmitting, onSubmit } : { isSubmitting: 
     const [colorPalette, setColorPalette] = useState("vibrant-playful");
     const [allowEdit, setAllowEdit] = useState(true);
 
+    const [imageModel, setImageModel] = useState('dall-e-3');
+    const [textModel, setTextModel] = useState('gpt-4o-mini');
+
     function handleSubmit() {
         const bookCreationOptions: BookCreationOptions = {
             idea, deliveryFormat, layout, artStyle, mood, lighting, colorPalette,
-            type: allowEdit ? 'outline' : 'summary'
+            type: allowEdit ? 'outline' : 'summary',
+            textModel, imageModel
         }
         onSubmit(bookCreationOptions);
     }
@@ -53,7 +57,7 @@ export default function SubmitIdea({ isSubmitting, onSubmit } : { isSubmitting: 
                     className="shadow-lg rounded-lg"
                 />
 
-                <Grid container p={3} spacing={3} className="shadow-lg bg-white rounded-lg">
+                <Grid container p={3} spacing={3} mb={3} className="shadow-lg bg-white rounded-lg">
                     <Grid size={2}>
                         <FormControl fullWidth>
                             <InputLabel>Delivery Format</InputLabel>
@@ -137,6 +141,27 @@ export default function SubmitIdea({ isSubmitting, onSubmit } : { isSubmitting: 
                                 <MenuItem value="sepia-vintage">Sepia / Vintage</MenuItem>
                                 <MenuItem value="muted-tones">Muted Tones</MenuItem>
                             </Select>
+                        </FormControl>
+                    </Grid>
+                </Grid>
+
+                <Grid container p={3} spacing={3} className="shadow-lg bg-white rounded-lg" textAlign='left'>
+                    <Grid size={6}>
+                        <FormControl fullWidth sx={{ mb: 2 }}>
+                            <FormLabel>Image Model</FormLabel>
+                            <RadioGroup row name="model" defaultValue="dall-e-3" value={ imageModel } onChange={(e) => setImageModel(e.target.value)}>
+                                <FormControlLabel value="dall-e-3" control={<Radio />} label="Dall-E 3" />
+                                <FormControlLabel value="gpt-image-1" control={<Radio />} label="GPT Image 1" />
+                            </RadioGroup>
+                        </FormControl>
+                    </Grid>
+                    <Grid size={6}>
+                        <FormControl fullWidth sx={{ mb: 2 }}>
+                            <FormLabel>Text Model</FormLabel>
+                            <RadioGroup row name="model" defaultValue="gpt-4-turbo" value={ textModel } onChange={(e) => setTextModel(e.target.value)}>
+                                <FormControlLabel value="gpt-4o-mini" control={<Radio />} label="GPT 4o Mini" />
+                                <FormControlLabel value="gpt-4-turbo" control={<Radio />} label="GPT 4 Turbo" />
+                            </RadioGroup>
                         </FormControl>
                     </Grid>
                 </Grid>

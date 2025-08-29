@@ -19,7 +19,7 @@ export async function POST(request: Request) {
     try {
 
       const gptResponse = await openai.chat.completions.create({
-          model: 'gpt-4-turbo',
+          model: book.workflow.textModel,
           messages: [
               { role: 'system',
                   content: `You are given an idea for children's fun book.

@@ -19,5 +19,7 @@ export type BookCreationOptions = {
     artStyle: string,
     mood: string,
     lighting: string,
-    colorPalette: string
+    colorPalette: string,
+    textModel: string,
+    imageModel: string
 }

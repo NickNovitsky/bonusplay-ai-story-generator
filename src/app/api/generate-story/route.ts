@@ -15,7 +15,7 @@ export async function POST(request: Request) {
     if (!book.workflow.summary && !book.workflow.outline) return NextResponse.json({ error: { message: 'No summary or outline found'}}, { status: 500 });
 
     const gptResponse = await openai.chat.completions.create({
-        model: 'gpt-4-turbo',
+        model: book.workflow.textModel,
         messages: [
             { role: 'system',
                 content: `You are given a summary of children's fun book.
