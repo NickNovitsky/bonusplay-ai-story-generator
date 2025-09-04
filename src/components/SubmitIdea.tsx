@@ -1,4 +1,5 @@
 import { BookCreationOptions } from "@/types/book";
+import { TextModel } from "@/types/models";
 import { Button, Checkbox, Container, FormControl, FormControlLabel, FormLabel, Grid, InputLabel, MenuItem, Radio, RadioGroup, Select, Stack, styled, TextField, Typography } from "@mui/material";
 import { useState } from "react";
 
@@ -30,10 +31,11 @@ export default function SubmitIdea({ isSubmitting, onSubmit } : { isSubmitting: 
     const [textModel, setTextModel] = useState('gpt-4o-mini');
 
     function handleSubmit() {
+        const selectedTextModel: TextModel = textModel === 'gpt-4-turbo' ? textModel : 'gpt-4o-mini';
         const bookCreationOptions: BookCreationOptions = {
             idea, deliveryFormat, layout, artStyle, mood, lighting, colorPalette,
             type: allowEdit ? 'outline' : 'summary',
-            textModel, imageModel
+            textModel: selectedTextModel, imageModel
         }
         onSubmit(bookCreationOptions);
     }
