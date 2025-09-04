@@ -1,3 +1,5 @@
+import { TextModel } from "./models"
+
 export type Book = {
     id: string,
     coverImageUrl: string,
@@ -20,6 +22,6 @@ export type BookCreationOptions = {
     mood: string,
     lighting: string,
     colorPalette: string,
-    textModel: string,
+    textModel: TextModel,
     imageModel: string
 }

@@ -2,9 +2,11 @@ import { NextRequest, NextResponse } from 'next/server'
 import openai from '@/lib/openai';
 import { supabase } from '@/lib/supabase';
 import { PostgrestSingleResponse } from '@supabase/supabase-js';
-import { Book } from '@/types/book';
-import { base64ToBlob } from '@/lib/utils';
+import { Book, BookWorkflow } from '@/types/book';
 import { randomUUID } from 'node:crypto';
+import sharp from 'sharp';
+import { renderTitleOverlayPNG } from '@/lib/titleOverlay';
+import { TextModel } from '@/types/models';
 
 export async function POST(req: NextRequest) {
 
@@ -16,44 +18,21 @@ export async function POST(req: NextRequest) {
   
     if (error) return NextResponse.json({ error: { message: 'Book not found'}}, { status: 400 });
 
-    const { idea, artStyle, mood, lighting, colorPalette: colorScheme } = book.workflow;
-
-    const formattedPrompt = ` 
-    TASK: Create the FINAL FLAT 2D FRONT COVER for a children's picture book.
-    Subject / scene: ${idea}.
-    Art style: ${artStyle}.
-    Mood: ${mood}.
-    Lighting: ${lighting}.
-    Color scheme: ${colorScheme}.
-
-    Typography & title rules:
-    • No text, labels, logos, watermarks, UI elements, or captions.
-
-    Composition rules:
-    • Full-bleed illustration that fills the canvas edge-to-edge; straight-on (0°).
-    • DO NOT depict a 3D book, mockup, desk, tabletop, frames, borders, spines, page edges, or perspective tilt.
-    • DO NOT include any props or art tools: no palettes, paints, pencils, pens, brushes, erasers, paper, or stationery.
-    • Keep a clear focal character/scene; avoid clutter behind the title area.
-    • Child-friendly, cohesive, inviting look suited to a picture book.
-    STRICT OVERRIDE: Flat, head-on 2D cover only. Absolutely no surrounding objects or surfaces or photography-style staging.
-    `;
-
     try {
-        const imageResponse = await openai.images.generate({
-            model: book.workflow.imageModel,
-            prompt: formattedPrompt,
-            style: book.workflow.imageModel === 'dall-e-3' && 'natural' || undefined,
-            size: '1024x1024',
-            quality: book.workflow.imageModel === 'dall-e-3' && 'standard' || 'low',
-            n: 1,
-            response_format: book.workflow.imageModel === 'dall-e-3' && 'b64_json' || undefined
-        });
 
-        const b64Json = imageResponse.data && imageResponse.data[0].b64_json;
-        
-        if (!b64Json) throw new Error('Unexpected response');
-    
-        const uploadResponse = await uploadToSupabase(b64Json, `${randomUUID()}.jpg`);
+        const buffer = await generateImage(book.workflow);
+
+        const title = await generateTitle(book.workflow.idea, book.workflow.textModel) || book.workflow.idea;
+
+        // REVIEW: What if `title` is null?
+
+        const overlayPng: Buffer = await renderTitleOverlayPNG({ width: 1024, height: 1024, title });
+
+        const out = await sharp(buffer).composite([{ input: overlayPng, top: 0, left: 0 }]).jpeg().toBuffer();
+
+        const filename = `${randomUUID()}.jpg`;
+   
+        const uploadResponse = await supabase.storage.from('images').upload(filename, out, { contentType: 'image/jpg', upsert: false });
             
         if (uploadResponse.error) {
             throw new Error(uploadResponse.error.message);
@@ -72,10 +51,53 @@ export async function POST(req: NextRequest) {
     }
 }
 
-const uploadToSupabase = async (b64Data: string, fileName: string) => {
-    // Convert base64 to blob
-    const blob = base64ToBlob(b64Data, 'image/jpg');
+async function generateImage(workflow: BookWorkflow): Promise<Buffer> {
+
+    const { idea, artStyle, mood, lighting, colorPalette: colorScheme } = workflow;
+
+    const formattedPrompt = ` 
+        TASK: Create flat 2D FRONT COVER ART (background illustration only) for a children's picture book.
+        Subject / scene: ${idea}.
+        Art style: ${artStyle}.
+        Mood: ${mood}.
+        Lighting: ${lighting}.
+        Color scheme: ${colorScheme}.
+        Composition rules:
+        • Full-bleed illustration, straight-on (0°).
+        • Leave a calm, uncluttered region in the TOP-LEFT quadrant suitable for overlaid title text (clean gradients or light sky/water are fine).
+        • DO NOT render any text of any kind.
+        • DO NOT show a 3D book, mockup, desk, borders, spines, or props (palettes, brushes, pencils, paper, etc.).
+        • Child-friendly, clear focal character/scene.
+        STRICT OVERRIDE: Flat, head-on 2D cover only. Absolutely no surrounding objects or surfaces or photography-style staging.
+        `;
+
+    const imageResponse = await openai.images.generate({
+        model: workflow.imageModel,
+        prompt: formattedPrompt,
+        style: workflow.imageModel === 'dall-e-3' && 'natural' || undefined,
+        size: '1024x1024',
+        quality: workflow.imageModel === 'dall-e-3' && 'standard' || 'low',
+        n: 1,
+        response_format: workflow.imageModel === 'dall-e-3' && 'b64_json' || undefined
+    });
+
+    const b64Json = imageResponse.data && imageResponse.data[0].b64_json;
     
-    // Upload to Supabase Storage
-    return await supabase.storage.from('images').upload(fileName, blob, { contentType: 'image/png', upsert: false });
-  };
+    if (!b64Json) throw new Error('Unexpected response');
+
+    return Buffer.from(b64Json, 'base64');
+}
+
+async function generateTitle(idea: string, model: TextModel): Promise<string|null> {
+    const response = await openai.chat.completions.create({
+        model,
+        messages: [
+            { role: 'system',
+                content: `You are given an idea for a children's fun book.
+                Create title for this book which must not exceed five words.
+                Do not use fancy formatting, special characters, and quotation marks. Output only text.`},
+            { role: 'user', content: idea }
+        ]
+    });
+    return response.choices[0].message.content;
+}

@@ -1,7 +1,7 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  serverExternalPackages: ["pdfkit"],
+  serverExternalPackages: ["pdfkit", "@resvg/resvg-js"],
   //reactStrictMode: false // Prevents "useEffect" to run twice, in particular
 };
 
