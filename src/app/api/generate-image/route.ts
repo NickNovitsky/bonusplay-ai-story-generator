@@ -55,20 +55,25 @@ async function generateImage(workflow: BookWorkflow): Promise<Buffer> {
 
     const { idea, artStyle, mood, lighting, colorPalette: colorScheme } = workflow;
 
+    const styleNorm = normalizeStyle(artStyle || '');
+
     const formattedPrompt = ` 
-        TASK: Create flat 2D FRONT COVER ART (background illustration only) for a children's picture book.
+        Create a SINGLE flat, borderless 2D SCENE ILLUSTRATION for a children's picture-book.
+        Render ONLY the scene itself (characters and environment) as if it is a square canvas cropped tightly to the edges.
+
         Subject / scene: ${idea}.
-        Art style: ${artStyle}.
-        Mood: ${mood}.
-        Lighting: ${lighting}.
-        Color scheme: ${colorScheme}.
-        Composition rules:
-        • Full-bleed illustration, straight-on (0°).
-        • Leave a calm, uncluttered region in the TOP-LEFT quadrant suitable for overlaid title text (clean gradients or light sky/water are fine).
-        • DO NOT render any text of any kind.
-        • DO NOT show a 3D book, mockup, desk, borders, spines, or props (palettes, brushes, pencils, paper, etc.).
-        • Child-friendly, clear focal character/scene.
-        STRICT OVERRIDE: Flat, head-on 2D cover only. Absolutely no surrounding objects or surfaces or photography-style staging.
+        Style: ${styleNorm || 'whimsical children’s illustration'}, ${mood || 'friendly'}, ${lighting || 'soft diffuse light'}, ${colorScheme || 'harmonious palette'}.
+
+        Composition requirements:
+        • Full-bleed illustration, straight-on (0°), no borders, no frames.
+        • Leave a calm, uncluttered area in the TOP-LEFT for a future title overlay.
+        • Crop tightly to the artwork — nothing outside the scene.
+
+        ABSOLUTE RESTRICTIONS (must follow):
+        • Do NOT depict any book, book cover, back cover, spine, pages, barcode, stickers, thumbnails, callouts, or packaging.
+        • Do NOT show any props or studio materials: no palettes, brushes, pencils, pens, paper, tape, desks, or photography backgrounds.
+        • Do NOT render any text, numbers, logos, watermarks, UI, or captions of any kind.
+        • The output must be a single illustration only — no mockups, no product photos, no multi-panel layouts.
         `;
 
     const imageResponse = await openai.images.generate({
@@ -100,4 +105,17 @@ async function generateTitle(idea: string, model: TextModel): Promise<string|nul
         ]
     });
     return response.choices[0].message.content;
+}
+
+function normalizeStyle(style: string | undefined) {
+  if (!style) return '';
+  let s = style.trim();
+
+  // Prevent studio props when users pick paint/pastel mediums.
+  s = s.replace(/water\s*color|watercolor/gi, 'watercolor-look digital illustration, no paper texture, no paint splashes, no art tools');
+  s = s.replace(/gouache/gi, 'gouache-look digital illustration, no paper texture, no art tools');
+  s = s.replace(/pastel/gi, 'pastel-look digital illustration, no paper texture, no art tools');
+  s = s.replace(/oil paint|oil painting/gi, 'oil-paint-look digital illustration, no canvas texture, no art tools');
+  s = s.replace(/pencil|sketch/gi, 'clean line digital illustration, no pencils, no paper, no sketchbook');
+  return s;
 }
