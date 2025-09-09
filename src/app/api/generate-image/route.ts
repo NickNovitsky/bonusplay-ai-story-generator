@@ -8,6 +8,14 @@ import sharp from 'sharp';
 import { renderTitleOverlayPNG } from '@/lib/titleOverlay';
 import { TextModel } from '@/types/models';
 
+type ClarifiedBrief = {
+  subject: string;           // short, unambiguous subject line
+  setting: string;           // concise scene + background
+  composition_hint: string;  // e.g., "main subject slightly right-of-center; keep top-left calm"
+  style_hint: string;        // merges user artStyle/mood/lighting/palette into one crisp line
+  forbid: string[];          // negative elements (props, frames, borders, UI, mockups, etc.)
+};
+
 export async function POST(req: NextRequest) {
 
     // TODO: Validate input parameters
@@ -20,7 +28,9 @@ export async function POST(req: NextRequest) {
 
     try {
 
-        const buffer = await generateImage(book.workflow);
+        const brief = await clarifyIdeaWithLLM(book.workflow, 'gpt-4o-mini');
+
+        const buffer = await generateImage(brief, book.workflow);
 
         const title = await generateTitle(book.workflow.idea, book.workflow.textModel) || book.workflow.idea;
 
@@ -51,30 +61,27 @@ export async function POST(req: NextRequest) {
     }
 }
 
-async function generateImage(workflow: BookWorkflow): Promise<Buffer> {
+async function generateImage(brief: ClarifiedBrief, workflow: BookWorkflow): Promise<Buffer> {    
 
-    const { idea, artStyle, mood, lighting, colorPalette: colorScheme } = workflow;
+    const styleNormalized = normalizeStyle(brief.style_hint);
 
-    const styleNorm = normalizeStyle(artStyle || '');
+    const formattedPrompt = `
+        Create a SINGLE flat, borderless 2D SCENE ILLUSTRATION for a children’s picture book.
+        Render ONLY the scene itself (characters and environment) as a tight, full-bleed square canvas.
 
-    const formattedPrompt = ` 
-        Create a SINGLE flat, borderless 2D SCENE ILLUSTRATION for a children's picture-book.
-        Render ONLY the scene itself (characters and environment) as if it is a square canvas cropped tightly to the edges.
+        Subject: ${brief.subject}
+        Setting: ${brief.setting}
+        Composition: ${brief.composition_hint}
+        Style: ${styleNormalized}
 
-        Subject / scene: ${idea}.
-        Style: ${styleNorm || 'whimsical children’s illustration'}, ${mood || 'friendly'}, ${lighting || 'soft diffuse light'}, ${colorScheme || 'harmonious palette'}.
+        ABSOLUTE RESTRICTIONS:
+        • Do NOT depict any books, pages, spines, barcodes, layout guides, crop marks, frames, mats, borders, white bands, stickers, or UI.
+        • Do NOT show studio props/tools: palettes, brushes, pencils, pens, paper, sketchbooks, easels, desks, swatches, color chips, or photographed sets.
+        • Do NOT render any text, numbers, logos, watermarks, or captions.
+        • The result must be a single, flat, full-bleed illustration only — nothing outside the scene.
 
-        Composition requirements:
-        • Full-bleed illustration, straight-on (0°), no borders, no frames.
-        • Leave a calm, uncluttered area in the TOP-LEFT for a future title overlay.
-        • Crop tightly to the artwork — nothing outside the scene.
-
-        ABSOLUTE RESTRICTIONS (must follow):
-        • Do NOT depict any book, book cover, back cover, spine, pages, barcode, stickers, thumbnails, callouts, or packaging.
-        • Do NOT show any props or studio materials: no palettes, brushes, pencils, pens, paper, tape, desks, or photography backgrounds.
-        • Do NOT render any text, numbers, logos, watermarks, UI, or captions of any kind.
-        • The output must be a single illustration only — no mockups, no product photos, no multi-panel layouts.
-        `;
+        NEGATIVE CUES: ${brief.forbid.join(', ')}
+        `.trim();
 
     const imageResponse = await openai.images.generate({
         model: workflow.imageModel,
@@ -108,14 +115,75 @@ async function generateTitle(idea: string, model: TextModel): Promise<string|nul
 }
 
 function normalizeStyle(style: string | undefined) {
-  if (!style) return '';
-  let s = style.trim();
+    if (!style) return '';
+    let s = style.trim();
 
-  // Prevent studio props when users pick paint/pastel mediums.
-  s = s.replace(/water\s*color|watercolor/gi, 'watercolor-look digital illustration, no paper texture, no paint splashes, no art tools');
-  s = s.replace(/gouache/gi, 'gouache-look digital illustration, no paper texture, no art tools');
-  s = s.replace(/pastel/gi, 'pastel-look digital illustration, no paper texture, no art tools');
-  s = s.replace(/oil paint|oil painting/gi, 'oil-paint-look digital illustration, no canvas texture, no art tools');
-  s = s.replace(/pencil|sketch/gi, 'clean line digital illustration, no pencils, no paper, no sketchbook');
-  return s;
+    // Prevent studio props when users pick paint/pastel mediums.
+    s = s.replace(/water\s*color|watercolor/gi, 'watercolor-look digital illustration, no paper texture, no paint splashes, no art tools');
+    s = s.replace(/gouache/gi, 'gouache-look digital illustration, no paper texture, no art tools');
+    s = s.replace(/pastel/gi, 'pastel-look digital illustration, no paper texture, no art tools');
+    s = s.replace(/oil paint|oil painting/gi, 'oil-paint-look digital illustration, no canvas texture, no art tools');
+    s = s.replace(/pencil|sketch/gi, 'clean line digital illustration, no pencils, no paper, no sketchbook');
+    return s;
+}
+
+async function clarifyIdeaWithLLM(workflow: BookWorkflow, textModel: string): Promise<ClarifiedBrief> {
+    const idea = (workflow.idea || '').trim();
+    const artStyle = (workflow.artStyle || '').trim();
+    const mood = (workflow.mood || 'friendly').trim();
+    const lighting = (workflow.lighting || 'soft diffuse light').trim();
+    const palette = (workflow.colorPalette || 'harmonious palette').trim();
+
+    const sys = `You write *very short* JSON scene briefs for an image model.
+        - Output must be valid JSON only (no prose).
+        - Be specific but concise (single sentences).
+        - Never include brand names or copyrighted characters.
+        - Assume a square, flat 2D children's book *scene illustration* (not a mockup).`;
+
+        const usr = `USER_IDEA: ${idea}
+
+        CONTEXT:
+        - Art style (optional): ${artStyle || 'none'}
+        - Mood: ${mood}
+        - Lighting: ${lighting}
+        - Palette: ${palette}
+
+        REQUIREMENTS:
+        - subject: 1 short sentence describing the key characters and action, removing ambiguity.
+        - setting: 1 short sentence describing the background/environment (single, continuous backdrop).
+        - composition_hint: 1 short sentence encouraging a calm TOP-LEFT area for a future title; main subject slightly right-of-center.
+        - style_hint: merge style/mood/lighting/palette into one crisp instruction suitable for an image model (no tool props).
+        - forbid: array of concise negatives that prevent mockups, borders, frames, white margins, paper/canvas textures, studio tools (palettes/brushes/pencils), crop marks, barcodes, pages, spines, thumbnails, stickers, UI.
+
+        Return JSON with keys: subject, setting, composition_hint, style_hint, forbid`;
+
+    const r = await openai.chat.completions.create({
+        model: textModel,
+        temperature: 0.2,
+        max_tokens: 220,
+        messages: [
+        { role: 'system', content: sys },
+        { role: 'user', content: usr }
+        ]
+    });
+
+    const raw = r.choices?.[0]?.message?.content || '{}';
+    let brief: ClarifiedBrief;
+    try {
+        brief = JSON.parse(raw);
+    } catch {
+        // Fallback: very defensive defaults
+        brief = {
+        subject: idea || 'a friendly animal in a simple scene',
+        setting: 'a single, continuous background suitable for a children’s illustration',
+        composition_hint: 'main subject slightly right-of-center; keep the TOP-LEFT calm for a title overlay',
+        style_hint: `${artStyle || 'whimsical digital illustration'}, ${mood}, ${lighting}, ${palette}`,
+        forbid: [
+            'any book or mockup elements', 'frames', 'borders', 'white margins',
+            'crop marks', 'pages', 'spines', 'barcodes', 'stickers', 'thumbnails',
+            'UI or captions', 'studio props (palettes, brushes, pencils, paper)'
+        ]
+        };
+    }
+    return brief;
 }
